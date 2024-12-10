@@ -1,0 +1,93 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+*.sqlite
+*.log
+*.tmp
+.DS_Store
+.idea/
+.vscode/
+.env
+*.env
+*.bak
+*.swp
+*.sublime-workspace
+
+# --- Poetry / Virtualenv ---
+/.venv/
+poetry.lock
+# En cas de virtualenv local
+.env/
+
+# --- SQLite ---
+*.db
+*.sqlite3
+*.sqlite
+
+# --- Token JWT ---
+~/.epicevents_token
+
+# --- Logs ---
+logs/
+*.log
+debug.log
+
+# --- Tests ---
+.coverage
+*.cover
+nosetests.xml
+test-results/
+junit.xml
+tox/
+.cache/
+pytest_cache/
+htmlcov/
+.coverage.*
+*.pytest_cache
+
+# --- Alembic Migrations ---
+migrations/versions/*.pyc
+migrations/versions/*.tmp
+migrations/versions/*.bak
+
+# --- Build and Distribute ---
+dist/
+build/
+*.egg-info/
+.eggs/
+MANIFEST
+*.manifest
+*.spec
+
+# --- Editor/IDE Configuration ---
+.vscode/
+.idea/
+*.iml
+*.out
+*.tmp
+*.class
+*.sublime-project
+*.sublime-workspace
+
+# --- OS-specific ---
+Thumbs.db
+ehthumbs.db
+*.class
+desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# --- Secrets ---
+.env
+secrets.json
+secret.key
+
+# --- Rich CLI ---
+rich.log
+rich.log.*
