@@ -1,5 +1,9 @@
 from sqlalchemy.orm import Session
 from app.db.models.client import Client
+from sqlalchemy.orm import load_only
+from rich.console import Console
+
+console = Console()
 
 
 def create_client(
@@ -20,13 +24,25 @@ def create_client(
     return client
 
 
-def get_client(db: Session, client_id: int):
-    """Récupérer un client par ID."""
-    return db.query(Client).filter(Client.id == client_id).first()
+def get_client(db, client_id):
+    """Récupérer un client en s'assurant que id_commercial est bien chargé."""
+    client = (
+        db.query(Client)
+        .options(
+            load_only(Client.id, Client.nom_complet, Client.id_commercial)
+        )
+        .filter(Client.id == client_id)
+        .first()
+    )
+    return client
 
 
-def get_all_clients(db: Session):
-    """Récupérer tous les clients."""
+def get_all_clients(
+    db: Session, user_id: int, role: str, all_clients: bool = False
+):
+    """Récupérer tous les clients en fonction du rôle de l'utilisateur."""
+    if role == "commercial" and not all_clients:
+        return db.query(Client).filter(Client.id_commercial == user_id).all()
     return db.query(Client).all()
 
 

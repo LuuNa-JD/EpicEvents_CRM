@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from app.db.models.evenement import Evenement
+from app.db.models.contrat import Contrat
 
 
 def create_evenement(
@@ -8,11 +9,17 @@ def create_evenement(
     support_id: int,
     date_debut,
     date_fin,
-    lieu: str,
-    participants: int,
-    notes: str
+    lieu,
+    participants,
+    notes
 ):
-    """Créer un nouvel événement."""
+    """Créer un événement uniquement si le contrat est signé."""
+    contrat = db.query(Contrat).filter(Contrat.id == contrat_id).first()
+    if not contrat or not contrat.statut:
+        raise ValueError(
+            "Impossible de créer un événement pour un contrat non signé."
+        )
+
     evenement = Evenement(
         id_contrat=contrat_id,
         id_support=support_id,

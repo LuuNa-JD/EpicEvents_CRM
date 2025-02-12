@@ -20,9 +20,12 @@ def login(db: Session, login: str, password: str):
     """Authentifie un utilisateur et retourne un JWT."""
     collaborateur = authentifier_collaborateur(db, login, password)
     if collaborateur:
+        role = collaborateur.departement.nom
         token = generate_token(
             user_id=collaborateur.id,
-            role=collaborateur.departement
+            role=role,
+            nom=collaborateur.nom,
+            prenom=collaborateur.prenom
         )
         save_token(token)
         print("Authentification réussie. Votre jeton a été sauvegardé.")

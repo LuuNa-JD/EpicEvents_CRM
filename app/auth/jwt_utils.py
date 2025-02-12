@@ -3,11 +3,13 @@ import datetime
 from app.core.config import settings
 
 
-def generate_token(user_id: int, role: str):
+def generate_token(user_id: int, role: str, nom: str, prenom: str):
     """Génère un token JWT pour un utilisateur."""
     payload = {
         "user_id": user_id,
         "role": role,
+        "nom": nom,
+        "prenom": prenom,
         "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
     }
     return jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")

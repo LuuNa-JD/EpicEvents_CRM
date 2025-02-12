@@ -1,19 +1,23 @@
-from sqlalchemy import Column, Integer, String, Enum
+from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import validates
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import Session
 from argon2 import PasswordHasher, exceptions
-import enum
 import re
 from app.db.base import Base
 
 ph = PasswordHasher()
 
 
-class DepartementEnum(str, enum.Enum):
-    GESTION = "gestion"
-    COMMERCIAL = "commercial"
-    SUPPORT = "support"
+class Departement(Base):
+    __tablename__ = "departements"
+
+    id = Column(Integer, primary_key=True, index=True)
+    nom = Column(String(50), unique=True, nullable=False)
+
+    collaborateurs = relationship(
+        "Collaborateur", back_populates="departement"
+    )
 
 
 class Collaborateur(Base):
@@ -23,9 +27,14 @@ class Collaborateur(Base):
     nom = Column(String(50), nullable=False)
     prenom = Column(String(50), nullable=False)
     email = Column(String(100), unique=True, nullable=False)
-    departement = Column(Enum(DepartementEnum), nullable=False)
     login = Column(String(50), unique=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
+
+    # Département du collaborateur
+    departement_id = Column(
+        Integer, ForeignKey("departements.id"), nullable=False
+    )
+    departement = relationship("Departement", back_populates="collaborateurs")
 
     # Relation avec Client
     clients = relationship("Client", back_populates="commercial")
@@ -43,15 +52,6 @@ class Collaborateur(Base):
             raise ValueError("Le login ne doit pas contenir d'espaces.")
         if len(value) < 3:
             raise ValueError("Le login doit comporter au moins 3 caractères.")
-        return value
-
-    @validates("departement")
-    def validate_departement(self, key, value):
-        if value not in DepartementEnum.__members__.values():
-            raise ValueError(
-                f"Département invalide : {value}. "
-                f"Les choix valides sont : {list(DepartementEnum)}"
-            )
         return value
 
     @staticmethod

@@ -7,12 +7,29 @@ from app.cli.main import cli
 from app.db.session import SessionLocal
 from app.db.base import Base
 from sqlalchemy.exc import SQLAlchemyError
+from rich.markup import escape
+from app.utils.file_utils import load_token
+from app.auth.jwt_utils import decode_token
+from app.utils.config import get_role_commands, get_command_description
 
 console = Console()
-# Style pour le prompt interactif
+ROLE_COMMANDS = get_role_commands()
+
 prompt_style = Style.from_dict({
     'prompt': '#00CFFF bold',
 })
+
+
+def get_user_role():
+    """Récupère le rôle de l'utilisateur connecté à partir du token."""
+    token = load_token()
+    if not token:
+        return None  # Aucune connexion
+
+    payload = decode_token(token)
+    if not payload:
+        return None  # Token invalide ou expiré
+    return payload.get("role")
 
 
 def init_database():
@@ -38,8 +55,11 @@ def init_database():
 
 def display_welcome_message():
     """
-    Affiche un message d'accueil élégant.
+    Affiche un message d'accueil élégant et la liste des commandes autorisées.
     """
+    role = get_user_role()
+    allowed_commands = ROLE_COMMANDS.get(role, [])
+
     console.print(
         """
 [bold cyan]
@@ -49,13 +69,38 @@ def display_welcome_message():
 [/bold cyan]
 """
     )
-    console.print(
-        "Tapez [green]--help[/green] pour voir les commandes disponibles.\n"
-    )
-    console.print(
-        "Pour quitter en mode interactif, tapez [yellow]'exit'[/yellow] ou "
-        "[yellow]'quit'[/yellow].\n"
-    )
+
+    if role:
+        console.print(f"[bold cyan]🎭 Rôle détecté : {role}[/bold cyan]\n")
+
+        if allowed_commands:
+            console.print("[bold green]Commandes disponibles :[/bold green]\n")
+            table = "\n".join([f"  🔹 [yellow]{cmd}[/yellow] - {get_command_description(cmd)}" for cmd in allowed_commands])
+            console.print(table)
+        else:
+            console.print("[bold red]Aucune commande disponible pour votre rôle.[/bold red]\n")
+    else:
+        console.print("[bold red]Vous devez être connecté pour voir les commandes disponibles.[/bold red]\n")
+
+
+@cli.command(name="help", help="Affiche la liste des commandes disponibles avec leur description.")
+def custom_help():
+    """
+    Affiche la liste détaillée des commandes en fonction du rôle de l'utilisateur.
+    """
+    role = get_user_role()
+    if not role:
+        console.print("[bold red]Vous devez être connecté pour voir les commandes disponibles.[/bold red]")
+        return
+
+    allowed_commands = ROLE_COMMANDS.get(role, [])
+    if allowed_commands:
+        console.print(f"[bold cyan]🎭 Rôle détecté : {role}[/bold cyan]\n")
+        console.print("[bold green]Commandes disponibles :[/bold green]\n")
+        table = "\n".join([f"  🔹[yellow]{cmd}[/yellow] - {get_command_description(cmd)}" for cmd in allowed_commands])
+        console.print(table)
+    else:
+        console.print("[bold red]Aucune commande disponible pour votre rôle.[/bold red]\n")
 
 
 def interactive_menu():
@@ -67,29 +112,24 @@ def interactive_menu():
     session = PromptSession()
     while True:
         try:
-            # Prompt interactif stylisé
             command = session.prompt(
                 [('class:prompt', 'epic_events> ')],
                 style=prompt_style
             ).strip()
 
             if command.lower() in ["exit", "quit"]:
-                console.print("[bold green]À bientôt ! 👋[/bold green]")
+                console.print("[bold green]👋 À bientôt ![/bold green]")
                 break  # Sort de la boucle
 
             elif command:
-                # Exécute la commande avec Click
                 cli.main(standalone_mode=False, args=command.split())
         except KeyboardInterrupt:
-            console.print(
-                "\n[bold yellow]Interrompu par l'utilisateur. "
-                "À bientôt ![/bold yellow]"
-            )
+            console.print("\n[bold yellow]⚠️ Interrompu par l'utilisateur. À bientôt ![/bold yellow]")
             break
         except click.exceptions.ClickException as e:
             console.print(f"[bold red]{e}[/bold red]")
         except Exception as e:
-            console.print(f"[bold red]Erreur inattendue : {e}[/bold red]")
+            console.print(f"[bold red]Erreur inattendue : {escape(str(e))}[/bold red]")
 
 
 def main():

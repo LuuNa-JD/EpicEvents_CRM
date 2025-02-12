@@ -1,5 +1,5 @@
 from app.db.session import SessionLocal
-from app.db.models.collaborateur import Collaborateur
+from app.db.models.collaborateur import Collaborateur, Departement
 from app.db.models.client import Client
 from app.db.models.contrat import Contrat
 from app.db.models.evenement import Evenement
@@ -14,6 +14,7 @@ def clear_seed_data():
         db.query(Contrat).delete()
         db.query(Client).delete()
         db.query(Collaborateur).delete()
+        db.query(Departement).delete
 
         db.commit()
         print("Données de seed supprimées avec succès.")

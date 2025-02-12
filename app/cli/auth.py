@@ -54,8 +54,13 @@ def user_status():
     if payload:
         user_id = payload.get("user_id")
         role = payload.get("role")
+        nom = payload.get("nom")
+        prenom = payload.get("prenom")
         console.print("[bold green]Vous êtes connecté.[/bold green]")
         console.print(f"ID Utilisateur : [cyan]{user_id}[/cyan]")
+        console.print(f"Nom : [yellow]{nom}[/yellow]")
+        console.print(f"Prénom : [yellow]{prenom}[/yellow]")
+
         console.print(f"Rôle : [yellow]{role}[/yellow]")
     else:
         console.print("[bold red]Token invalide ou expiré.[/bold red]")

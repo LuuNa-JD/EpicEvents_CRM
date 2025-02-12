@@ -35,9 +35,15 @@ def get_all_contrats(db: Session):
 
 
 def update_contrat(db: Session, contrat_id: int, **updates):
-    """Mettre à jour un contrat."""
+    """Mettre à jour un contrat sans modifier un contrat signé."""
     contrat = db.query(Contrat).filter(Contrat.id == contrat_id).first()
     if contrat:
+        # Empêcher la modification d'un contrat signé
+        if contrat.statut and "montant_total" in updates:
+            raise ValueError(
+                "Impossible de modifier le montant d'un contrat signé."
+            )
+
         for key, value in updates.items():
             setattr(contrat, key, value)
         db.commit()
