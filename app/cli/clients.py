@@ -31,13 +31,6 @@ def clients_group(ctx):
 
 @clients_group.command(name="list")
 @role_required(["gestion", "support", "commercial"])
-@click.option(
-    "-all", "all_clients", is_flag=True,
-    help=(
-        "Afficher tous les clients "
-        "(uniquement pour gestionnaires et support)."
-    )
-)
 def list_clients(all_clients):
     """
     Liste les clients disponibles dans le CRM.

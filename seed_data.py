@@ -21,24 +21,24 @@ def seed_departements():
             ).first():
                 db.add(Departement(nom=departement))
         db.commit()
-        print("✅ Départements ajoutés avec succès.")
+        print("Départements ajoutés avec succès.")
 
 
 def seed_data():
     """Ajoute des utilisateurs, clients, contrats et événements en base."""
     db = SessionLocal()
     try:
-        # 🔹 Récupérer les IDs des départements
+        # Récupérer les IDs des départements
         gestion_id = db.query(Departement).filter(Departement.nom == "gestion").first().id
         support_id = db.query(Departement).filter(Departement.nom == "support").first().id
         commercial_id = db.query(Departement).filter(Departement.nom == "commercial").first().id
 
-        # 🔹 Création des collaborateurs
+        # Création des collaborateurs
         admin = Collaborateur(
             nom="Admin",
             prenom="John",
             email="admin@example.com",
-            departement_id=gestion_id,  # ✅ Assignation correcte du département
+            departement_id=gestion_id,  # Assignation correcte du département
             login="admin",
             password_hash=Collaborateur.set_password("admin123")
         )
@@ -61,19 +61,19 @@ def seed_data():
 
         db.add_all([admin, commercial, support])
         db.commit()
-        print("✅ Collaborateurs ajoutés avec succès.")
+        print("Collaborateurs ajoutés avec succès.")
 
-        # 🔹 Récupérer les IDs après insertion
+        # Récupérer les IDs après insertion
         commercial_id = commercial.id
         support_id = support.id
 
-        # 🔹 Création des clients
+        # Création des clients
         client1 = Client(
             nom_complet="Kevin Casey",
             email="kevin@startup.io",
             telephone="+678 123 456 78",
             nom_entreprise="Cool Startup LLC",
-            id_commercial=commercial_id  # ✅ Assignation correcte du commercial
+            id_commercial=commercial_id
         )
         client2 = Client(
             nom_complet="Alice Cooper",
@@ -85,13 +85,13 @@ def seed_data():
 
         db.add_all([client1, client2])
         db.commit()
-        print("✅ Clients ajoutés avec succès.")
+        print("Clients ajoutés avec succès.")
 
-        # 🔹 Récupérer les IDs après insertion
+        # Récupérer les IDs après insertion
         client1_id = client1.id
         client2_id = client2.id
 
-        # 🔹 Création des contrats
+        # Création des contrats
         contrat1 = Contrat(
             id_client=client1_id,
             montant_total=10000.00,
@@ -107,13 +107,13 @@ def seed_data():
 
         db.add_all([contrat1, contrat2])
         db.commit()
-        print("✅ Contrats ajoutés avec succès.")
+        print("Contrats ajoutés avec succès.")
 
-        # 🔹 Récupérer les IDs après insertion
+        # Récupérer les IDs après insertion
         contrat1_id = contrat1.id
         contrat2_id = contrat2.id
 
-        # 🔹 Création des événements
+        # Création des événements
         evenement1 = Evenement(
             id_contrat=contrat1_id,
             id_support=support_id,
@@ -135,11 +135,11 @@ def seed_data():
 
         db.add_all([evenement1, evenement2])
         db.commit()
-        print("✅ Événements ajoutés avec succès.")
+        print("Événements ajoutés avec succès.")
 
     except Exception as e:
         db.rollback()
-        print(f"❌ Erreur lors de l'insertion des données : {e}")
+        print(f"Erreur lors de l'insertion des données : {e}")
 
     finally:
         db.close()

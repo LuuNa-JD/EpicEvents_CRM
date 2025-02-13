@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from app.db.models.collaborateur import Collaborateur
+from app.db.models.collaborateur import Departement
 
 
 def create_collaborateur(
@@ -7,19 +8,26 @@ def create_collaborateur(
     nom: str,
     prenom: str,
     email: str,
-    departement: str,
+    departement_id: int,
     login: str,
     password: str
 ):
     """Créer un nouveau collaborateur."""
+
+    # 🔹 Vérifie que l'ID du département existe
+    departement = db.query(Departement).filter(Departement.id == departement_id).first()
+    if not departement:
+        raise ValueError(f"Erreur : Aucun département avec l'ID {departement_id}.")
+
     collaborateur = Collaborateur(
         nom=nom,
         prenom=prenom,
         email=email,
-        departement=departement,
+        departement_id=departement.id,
         login=login,
         password_hash=Collaborateur.set_password(password)
     )
+
     db.add(collaborateur)
     db.commit()
     db.refresh(collaborateur)

@@ -3,97 +3,319 @@ from rich.console import Console
 from app.services.collaborateur_service import (
     create_new_collaborateur,
     update_existing_collaborateur,
-    delete_collaborateur_service
+    delete_collaborateur_service,
+    all_collaborateurs,
+    get_collaborateur_by_id
 )
 from app.db.session import SessionLocal
+from app.auth.permissions import role_required
+from app.utils.config import CustomGroup
+from app.utils.file_utils import load_token
+from app.auth.jwt_utils import decode_token
+from app.services.departement_service import get_all_departements
+from app.db.models.client import Client
+from app.db.models.collaborateur import Collaborateur
 
 console = Console()
 
 
 @click.group(
     name="collaborateurs",
-    help="Commandes pour gérer les collaborateurs (équipe gestion)."
+    no_args_is_help=False,
+    invoke_without_command=True,
+    cls=CustomGroup
 )
-def collaborateurs_group():
-    pass
+@click.pass_context
+def collaborateurs_group(ctx):
+    """Commandes pour gérer les collaborateurs."""
+    if ctx.invoked_subcommand is None:
+        console.print("[bold yellow]❗ Utilisez 'help' pour voir les commandes disponibles.[/bold yellow]")
+        ctx.exit(1)
 
 
 @collaborateurs_group.command(name="create")
-@click.option("--nom", prompt="Nom", help="Nom du collaborateur")
-@click.option("--prenom", prompt="Prénom", help="Prénom du collaborateur")
-@click.option("--email", prompt="Email", help="Email du collaborateur")
-@click.option(
-    "--departement", prompt="Département", help="Département du collaborateur"
-)
-@click.option("--login", prompt="Login", help="Login du collaborateur")
-@click.option(
-    "--password", prompt="Mot de passe", hide_input=True, help="Mot de passe"
-)
-@click.option("--token", prompt="Token JWT", help="Token JWT de l'utilisateur")
-def create_collaborateur(
-    nom, prenom, email, departement, login, password, token
-):
-    """Créer un nouveau collaborateur."""
+@role_required(["gestion"])
+def create_collaborateur():
+    """Créer un nouveau collaborateur en tant que gestionnaire."""
+    token = load_token()
+    if not token:
+        console.print("[bold red]Erreur : Vous devez être connecté pour cette commande.[/bold red]")
+        return
+
+    payload = decode_token(token)
+    if not payload:
+        console.print("[bold red]Erreur : Token invalide ou expiré. Veuillez vous reconnecter.[/bold red]")
+        return
+
+    user_id = payload.get("user_id")
+    role = payload.get("role")
+
+    if role != "gestion":
+        console.print("[bold red]Erreur : Seuls les gestionnaires peuvent créer un collaborateur.[/bold red]")
+        return
+
+    console.print(f"[bold cyan]🔹 Token valide - Utilisateur ID {user_id} - Rôle : {role}[/bold cyan]")
+
+    # Récupération des informations utilisateur
+    nom = click.prompt("Nom", type=str)
+    prenom = click.prompt("Prénom", type=str)
+    email = click.prompt("Email", type=str)
+    login = click.prompt("Nom d'utilisateur", type=str)
+    password = click.prompt("Mot de passe", type=str, hide_input=True)
+
+    # Récupération et affichage des départements disponibles
+    with SessionLocal() as db:
+        departements = get_all_departements(db)
+        departement_choices = {str(dep.id): dep.nom for dep in departements}
+
+    console.print("\n[bold cyan]📌 Départements disponibles :[/bold cyan]")
+    for dep_id, dep_nom in departement_choices.items():
+        console.print(f"   🔹 {dep_id} - {dep_nom}")
+
+    # Demander à l'utilisateur de choisir un département
+    departement_id = click.prompt(
+        "\nSélectionnez un département par son numéro",
+        type=click.Choice(departement_choices.keys(), case_sensitive=False),
+        show_choices=False
+    )
+
+    departement_id = int(departement_id)  # 🔹 Convertir en entier
+
     with SessionLocal() as db:
         try:
-            create_new_collaborateur(
-                db, token, nom, prenom, email, departement, login, password
+            collaborateur = create_new_collaborateur(
+                db, token, nom, prenom, email, departement_id, login, password
+            )
+            db.commit()
+            console.print(
+                f"[bold green]Collaborateur {collaborateur.nom} créé avec succès ![/bold green]"
+            )
+        except Exception as e:
+            db.rollback()
+            console.print(f"[bold red]Erreur lors de la création du collaborateur : {e}[/bold red]")
+
+
+@collaborateurs_group.command(name="list")
+@role_required(["gestion"])
+def list_collaborateurs():
+    """Lister tous les collaborateurs."""
+    token = load_token()
+    if not token:
+        console.print(
+            "[bold red]Erreur : Vous devez être connecté pour cette commande.[/bold red]"
+        )
+        return
+
+    payload = decode_token(token)
+    if not payload:
+        console.print(
+            "[bold red]Erreur : Token invalide ou expiré. "
+            "Veuillez vous reconnecter.[/bold red]"
+        )
+        return
+
+    user_id = payload.get("user_id")
+    role = payload.get("role")
+
+    if role != "gestion":
+        console.print(
+            "[bold red]Erreur : Seuls les gestionnaires peuvent "
+            "lister les collaborateurs.[/bold red]"
+        )
+        return
+
+    console.print(
+        f"[bold cyan]🔹 Token valide - Utilisateur ID {user_id} - "
+        f"Rôle : {role}[/bold cyan]"
+    )
+
+    with SessionLocal() as db:
+        collaborateurs = all_collaborateurs(db)
+        if not collaborateurs:
+            console.print(
+                "[bold yellow]Aucun collaborateur trouvé.[/bold yellow]"
+            )
+            return
+
+        console.print("\n[bold cyan]📌 Liste des collaborateurs :[/bold cyan]")
+        for collab in collaborateurs:
+            console.print(
+                f"   🔹 ID {collab.id} - {collab.nom} {collab.prenom} - "
+                f"{collab.email} - {collab.departement.nom}"
+            )
+
+
+@collaborateurs_group.command(name="show")
+@role_required(["gestion"])
+@click.argument("collaborateur_id", type=int)
+def show_collaborateur(collaborateur_id):
+    """Afficher les détails d'un collaborateur."""
+    token = load_token()
+    if not token:
+        console.print(
+            "[bold red]Erreur : Vous devez être connecté pour cette commande.[/bold red]"
+        )
+        return
+
+    payload = decode_token(token)
+    if not payload:
+        console.print(
+            "[bold red]Erreur : Token invalide ou expiré. "
+            "Veuillez vous reconnecter.[/bold red]"
+        )
+        return
+
+    with SessionLocal() as db:
+        try:
+            collaborateur = get_collaborateur_by_id(db, collaborateur_id)
+            if not collaborateur:
+                console.print(
+                    f"[bold red]❌ Erreur : Collaborateur ID {collaborateur_id} non trouvé.[/bold red]"
+                )
+                return
+
+            # 📌 Afficher les infos du collaborateur
+            console.print(
+                f"\n[bold cyan]📌 Détails du collaborateur ID {collaborateur_id} :[/bold cyan]"
             )
             console.print(
-                f"[bold green]Collaborateur {nom} "
-                "créé avec succès ![/bold green]"
+                f"   🔹 Nom : {collaborateur.nom} {collaborateur.prenom}\n"
+                f"   🔹 Email : {collaborateur.email}\n"
+                f"   🔹 Département : {collaborateur.departement.nom}\n"
+                f"   🔹 Login : {collaborateur.login}"
             )
+
+            # 📌 Si le collaborateur est un commercial, afficher ses clients
+            if collaborateur.departement.nom == "commercial":
+                clients = db.query(Client).filter(Client.id_commercial == collaborateur.id).all()
+                if clients:
+                    console.print("\n[bold cyan]📌 Clients gérés :[/bold cyan]")
+                    for client in clients:
+                        console.print(f"   🔹 {client.nom_complet} ({client.email})")
+                else:
+                    console.print("[bold magenta]Ce commercial n'a pas encore de clients.[/bold magenta]")
+
         except Exception as e:
             console.print(f"[bold red]Erreur : {e}[/bold red]")
 
 
 @collaborateurs_group.command(name="update")
-@click.option(
-    "--id", prompt="ID Collaborateur", type=int,
-    help="ID du collaborateur à modifier"
-)
-@click.option("--nom", help="Nouveau nom")
-@click.option("--prenom", help="Nouveau prénom")
-@click.option("--email", help="Nouvel email")
-@click.option("--departement", help="Nouveau département")
-@click.option("--login", help="Nouveau login")
-@click.option("--password", help="Nouveau mot de passe", hide_input=True)
-@click.option("--token", prompt="Token JWT", help="Token JWT de l'utilisateur")
-def update_collaborateur(
-    id, nom, prenom, email, departement, login, password, token
-):
+@role_required(["gestion"])
+def update_collaborateur():
     """Mettre à jour un collaborateur."""
-    updates = {
-        k: v
-        for k, v in locals().items()
-        if k not in ["id", "token"] and v
-    }
+    token = load_token()
+    if not token:
+        console.print("[bold red]Erreur : Vous devez être connecté pour cette commande.[/bold red]")
+        return
+
+    payload = decode_token(token)
+    if not payload:
+        console.print("[bold red]Erreur : Token invalide ou expiré. Veuillez vous reconnecter.[/bold red]")
+        return
+
+    role = payload.get("role")
+    if role != "gestion":
+        console.print("[bold red]Erreur : Seuls les gestionnaires peuvent mettre à jour un collaborateur.[/bold red]")
+        return
+
+    collaborateur_id = click.prompt("ID Collaborateur", type=int)
+
+    # ⚡ Demande des nouvelles valeurs
+    nom = click.prompt("Nouveau nom (laisser vide pour ne pas changer)", default="", show_default=False)
+    prenom = click.prompt("Nouveau prénom (laisser vide pour ne pas changer)", default="", show_default=False)
+    email = click.prompt("Nouvel email (laisser vide pour ne pas changer)", default="", show_default=False)
+    login = click.prompt("Nouveau login (laisser vide pour ne pas changer)", default="", show_default=False)
+    password = click.prompt("Nouveau mot de passe (laisser vide pour ne pas changer)", default="", show_default=False, hide_input=True)
 
     with SessionLocal() as db:
+        departements = get_all_departements(db)
+        departement_choices = {str(dep.id): dep.nom for dep in departements}
+
+        console.print("\n[bold cyan]📌 Départements disponibles :[/bold cyan]")
+        for dep_id, dep_nom in departement_choices.items():
+            console.print(f"   🔹 {dep_id} - {dep_nom}")
+
+        departement_id = click.prompt(
+            "\nSélectionnez un département par son numéro (laisser vide pour ne pas changer)",
+            type=str,
+            default="",
+            show_default=False
+        )
+
+        # Si l'utilisateur laisse vide, on ne change pas le département
+        if departement_id and departement_id in departement_choices:
+            departement_id = int(departement_id)
+        else:
+            departement_id = None
+
+    # Création du dictionnaire d'update en supprimant les valeurs vides
+    updates = {k: v for k, v in {
+        "nom": nom,
+        "prenom": prenom,
+        "email": email,
+        "departement_id": departement_id,
+        "login": login
+    }.items() if v}
+
+    # Gestion spécifique du mot de passe (hachage avant update)
+    if password:
+        updates["password_hash"] = Collaborateur.set_password(password)
+
+    if not updates:
+        console.print("[bold yellow]⚠️ Aucune modification apportée.[/bold yellow]")
+        return
+
+    # ⚡ Exécution de la mise à jour
+    with SessionLocal() as db:
         try:
-            update_existing_collaborateur(db, token, id, **updates)
-            console.print(
-                f"[bold green]Collaborateur ID {id} "
-                "mis à jour avec succès ![/bold green]"
-            )
-        except Exception as e:
+            collaborateur = update_existing_collaborateur(db, token, collaborateur_id, **updates)
+            if collaborateur:
+                console.print(f"[bold green]Collaborateur ID {collaborateur.id} mis à jour avec succès ![/bold green]")
+        except PermissionError as e:
+            console.print(f"[bold red]Erreur d'autorisation : {e}[/bold red]")
+        except ValueError as e:
             console.print(f"[bold red]Erreur : {e}[/bold red]")
+        except Exception as e:
+            console.print(f"[bold red]Erreur inattendue : {e}[/bold red]")
 
 
 @collaborateurs_group.command(name="delete")
-@click.option(
-    "--id", prompt="ID Collaborateur", type=int,
-    help="ID du collaborateur à supprimer"
-)
-@click.option("--token", prompt="Token JWT", help="Token JWT de l'utilisateur")
-def delete_collaborateur(id, token):
-    """Supprimer un collaborateur."""
+@role_required(["gestion"])
+@click.argument("collaborateur_id", type=int)
+def delete_collaborateur(collaborateur_id):
+    """
+    Supprimer un collaborateur en tant que gestionnaire.
+    """
+    token = load_token()
+    if not token:
+        console.print("[bold red]Erreur : Vous devez être connecté pour cette commande.[/bold red]")
+        return
+
+    payload = decode_token(token)
+    if not payload:
+        console.print("[bold red]Erreur : Token invalide ou expiré. Veuillez vous reconnecter.[/bold red]")
+        return
+
+    role = payload.get("role")
+    if role != "gestion":
+        console.print("[bold red]Erreur : Seuls les gestionnaires peuvent supprimer un collaborateur.[/bold red]")
+        return
+
+    console.print(f"\n[bold cyan]🔹 Suppression du collaborateur ID {collaborateur_id}...[/bold cyan]")
+
+    confirmation = click.confirm("Êtes-vous sûr de vouloir supprimer ce collaborateur ?", default=False)
+    if not confirmation:
+        console.print("[bold yellow]Suppression annulée.[/bold yellow]")
+        return
+
     with SessionLocal() as db:
         try:
-            delete_collaborateur_service(db, token, id)
-            console.print(
-                f"[bold green]Collaborateur ID {id} "
-                "supprimé avec succès ![/bold green]"
-            )
+            collaborateur = delete_collaborateur_service(db, token, collaborateur_id)
+            if collaborateur:
+                console.print(f"[bold green]Collaborateur ID {collaborateur.id} supprimé avec succès ![/bold green]")
+            else:
+                console.print(f"[bold red]Erreur : Collaborateur ID {collaborateur_id} non trouvé.[/bold red]")
+        except PermissionError as e:
+            console.print(f"[bold red]Erreur d'autorisation : {e}[/bold red]")
         except Exception as e:
-            console.print(f"[bold red]Erreur : {e}[/bold red]")
+            console.print(f"[bold red]Erreur inattendue : {e}[/bold red]")

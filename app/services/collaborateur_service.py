@@ -1,17 +1,38 @@
 from app.crud.collaborateurs import (
-    create_collaborateur, update_collaborateur, delete_collaborateur
+    create_collaborateur,
+    update_collaborateur,
+    delete_collaborateur,
+    get_all_collaborateurs,
+    get_collaborateur
 )
 from app.auth.permissions import gestion_required
+from app.db.models.collaborateur import Departement
 
 
 @gestion_required
-def create_new_collaborateur(
-    db, token, nom, prenom, email, departement, login, password
-):
+def create_new_collaborateur(db, token, nom, prenom, email, departement_id, login, password):
     """Créer un nouveau collaborateur (équipe gestion)."""
+
+    # Vérifier si le département existe bien
+    departement = db.query(Departement).filter(Departement.id == departement_id).first()
+
+    if not departement:
+        raise ValueError(f"❌ Erreur : Aucun département avec l'ID {departement_id}.")
+
     return create_collaborateur(
-        db, nom, prenom, email, departement, login, password
+        db, nom, prenom, email, departement.id, login, password
     )
+
+
+@gestion_required
+def all_collaborateurs(db):
+    """Récupérer tous les collaborateurs."""
+    return get_all_collaborateurs(db)
+
+
+def get_collaborateur_by_id(db, collaborateur_id):
+    """Récupérer un collaborateur par ID."""
+    return get_collaborateur(db, collaborateur_id)
 
 
 @gestion_required
