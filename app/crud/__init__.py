@@ -24,5 +24,4 @@ from .evenements import ( # noqa
     get_evenement,
     get_all_evenements,
     update_evenement,
-    delete_evenement
 )

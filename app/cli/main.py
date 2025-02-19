@@ -42,7 +42,8 @@ class CustomCLI(click.Group):
         if role:
             allowed_cmds = ROLE_COMMANDS.get(role, [])
 
-            if cmd_name not in allowed_cmds and not any(cmd_name.startswith(ac) for ac in allowed_cmds):
+            if (cmd_name not in allowed_cmds and
+                    not any(cmd_name.startswith(ac) for ac in allowed_cmds)):
                 console.print(f"[bold red]Accès refusé : La commande '{cmd_name}' n'est pas disponible pour votre rôle.[/bold red]")
                 ctx.exit(1)
 

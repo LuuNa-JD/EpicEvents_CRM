@@ -1,12 +1,10 @@
 import os
 from cryptography.fernet import Fernet, InvalidToken
 
-# Chemin sécurisé du token
 TOKEN_FILE = os.path.expanduser("~/.epicevents_token")
-KEY_FILE = os.path.expanduser("~/.epicevents_key")  # Clé de chiffrement
+KEY_FILE = os.path.expanduser("~/.epicevents_key")
 
 
-# Générer une clé de chiffrement si elle n'existe pas encore
 def generate_key():
     if not os.path.exists(KEY_FILE):
         key = Fernet.generate_key()
@@ -14,7 +12,6 @@ def generate_key():
             key_file.write(key)
 
 
-# Charger la clé de chiffrement
 def load_key():
     with open(KEY_FILE, "rb") as key_file:
         return key_file.read()
@@ -23,7 +20,7 @@ def load_key():
 # Stocke le token chiffré
 def save_token(token: str):
     """Stocke le token en le chiffrant."""
-    generate_key()  # Génère la clé si elle n'existe pas
+    generate_key()
     key = load_key()
     cipher = Fernet(key)
 
@@ -32,8 +29,7 @@ def save_token(token: str):
     with open(TOKEN_FILE, "wb") as file:
         file.write(encrypted_token)
 
-    # Sécuriser les permissions du fichier
-    os.chmod(TOKEN_FILE, 0o600)  # Seulement accessible par l'utilisateur
+    os.chmod(TOKEN_FILE, 0o600)
 
 
 # Charge et déchiffre le token

@@ -77,7 +77,6 @@ def update_client_by_commercial(db, token, client_id, **updates):
     payload = decode_token(token)
     user_id = payload.get("user_id")
 
-    # Vérifier si le client appartient au commercial
     client = get_client(db, client_id)
     if not client:
         raise ValueError("Client introuvable.")

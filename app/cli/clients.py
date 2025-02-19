@@ -1,11 +1,13 @@
 import click
 from rich.console import Console
+import re
 from app.services.client_service import (
     list_all_clients,
     create_client_for_commercial,
     update_client_by_commercial,
     get_client_details
 )
+from app.crud.clients import get_client_id
 from app.utils.file_utils import load_token
 from app.auth.jwt_utils import decode_token
 from app.db.session import SessionLocal
@@ -31,7 +33,8 @@ def clients_group(ctx):
 
 @clients_group.command(name="list")
 @role_required(["gestion", "support", "commercial"])
-def list_clients(all_clients):
+@click.option("-all", "-a", is_flag=True)
+def list_clients(all):
     """
     Liste les clients disponibles dans le CRM.
     """
@@ -52,10 +55,10 @@ def list_clients(all_clients):
     # Se connecter à la base de données
     with SessionLocal() as db:
         try:
-            clients = list_all_clients(db=db, token=token, all_clients=all_clients)
+            clients = list_all_clients(db=db, token=token, all_clients=all)
 
             if clients:
-                mode = "TOUS" if all_clients else "MES CLIENTS"
+                mode = "TOUS" if all else "MES CLIENTS"
                 console.print(f"[bold green]Liste des clients ({mode}):[/bold green]")
                 for client in clients:
                     console.print(
@@ -98,7 +101,13 @@ def create_client():
     # Saisie des informations du client
     nom = click.prompt("Nom complet", type=str)
     email = click.prompt("Email", type=str)
+    if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+        console.print("[bold red]Erreur : Email invalide.[/bold red]")
+        return
     telephone = click.prompt("Téléphone", type=str)
+    if not re.match(r"0[1-9]\d{8}", telephone):
+        console.print("[bold red]Erreur : Numéro de téléphone invalide.[/bold red]")
+        return
     entreprise = click.prompt("Nom de l'entreprise", type=str)
 
     # Connexion à la base de données et création du client
@@ -130,6 +139,7 @@ def update_client():
         console.print("[bold red]Erreur : Token invalide ou expiré. Veuillez vous reconnecter.[/bold red]")
         return
 
+    user_id = payload.get("user_id")
     role = payload.get("role")
 
     # Vérifier si l'utilisateur a le bon rôle
@@ -140,10 +150,26 @@ def update_client():
     # Demander l'ID du client à modifier
     client_id = click.prompt("ID du client à modifier", type=int)
 
+    with SessionLocal() as db:
+        client = get_client_id(db, client_id)
+        if not client:
+            console.print("[bold red]Erreur : Client introuvable.[/bold red]")
+            return
+
+        if client.id_commercial != user_id:
+            console.print("[bold red]Erreur : Vous ne pouvez modifier que vos propres clients.[/bold red]")
+            return
+
     # Demander les champs à modifier (avec valeurs par défaut à None)
     nom = click.prompt("Nouveau nom (laisser vide pour ne pas changer)", default="", type=str)
     email = click.prompt("Nouvel email (laisser vide pour ne pas changer)", default="", type=str)
+    if email and not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+        console.print("[bold red]Erreur : Email invalide.[/bold red]")
+        return
     telephone = click.prompt("Nouveau téléphone (laisser vide pour ne pas changer)", default="", type=str)
+    if telephone and not re.match(r"0[1-9]\d{8}", telephone):
+        console.print("[bold red]Erreur : Numéro de téléphone invalide.[/bold red]")
+        return
     entreprise = click.prompt("Nouvelle entreprise (laisser vide pour ne pas changer)", default="", type=str)
 
     # Construire l'objet updates

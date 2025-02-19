@@ -40,6 +40,14 @@ def get_evenement(db: Session, evenement_id: int):
     return db.query(Evenement).filter(Evenement.id == evenement_id).first()
 
 
+def get_evenement_for_support(db: Session, evenement_id: int, support_id: int):
+    """Récupérer un événement par ID pour un support."""
+    return db.query(Evenement).filter(
+                Evenement.id == evenement_id,
+                Evenement.id_support == support_id
+            ).first()
+
+
 def get_evenements_by_support(db: Session, support_id: int):
     """Filtrer les événements attribués au support."""
     return db.query(Evenement).filter(Evenement.id_support == support_id).all()
@@ -60,15 +68,4 @@ def update_evenement(db: Session, evenement_id: int, **updates):
             setattr(evenement, key, value)
         db.commit()
         db.refresh(evenement)
-    return evenement
-
-
-def delete_evenement(db: Session, evenement_id: int):
-    """Supprimer un événement."""
-    evenement = db.query(Evenement).filter(
-        Evenement.id == evenement_id
-    ).first()
-    if evenement:
-        db.delete(evenement)
-        db.commit()
     return evenement

@@ -4,10 +4,8 @@ from dotenv import load_dotenv
 from rich.console import Console
 import click
 
-# Initialize the console
 console = Console()
 
-# Charger les variables d'environnement
 load_dotenv()
 
 
@@ -18,37 +16,7 @@ def get_role_commands():
     role_commands_json = os.getenv("ROLE_COMMANDS")
     if role_commands_json:
         return json.loads(role_commands_json)
-    return {}  # Retourne un dictionnaire vide en cas d'erreur
-
-
-def get_command_description(cmd):
-    """Retourne une description plus détaillée des commandes."""
-    descriptions = {
-        "help": "Affiche la liste des commandes disponibles avec leur description.",
-        "auth": "Commandes pour gérer l'authentification.",
-        "auth login": "Se connecter en utilisant le login et le mot de passe.",
-        "auth logout": "Se déconnecter et supprimer le token JWT.",
-        "auth status": "Vérifier si l'utilisateur est connecté et afficher son rôle",
-        "clients": "Commandes pour gérer les clients",
-        "clients list": "Lister les clients disponibles du commercial, ajouter '-all' pour voir tous les clients.",
-        "clients show": "Afficher les détails d'un client par ID : ajouter l'ID du client.",
-        "clients create": "Créer un nouveau client (Commercial uniquement).",
-        "clients update": "Modifier un client existant (Commercial uniquement).",
-        "contrats list": "Afficher la liste des contrats.",
-        "evenements list": "Voir tous les événements.",
-        "collaborateurs": "Commandes pour gérer les collaborateurs.",
-        "collaborateurs create": "Créer un nouveau collaborateur (Gestion uniquement).",
-        "collaborateurs list": "Lister tous les collaborateurs.",
-        "collaborateurs show": "Afficher les détails d'un collaborateur par ID.",
-        "collaborateurs update": "Mettre à jour un collaborateur (Gestion uniquement).",
-        "collaborateurs delete": "Supprimer un collaborateur (Gestion uniquement).",
-        "create_user": "Créer un nouvel utilisateur (Admin uniquement).",
-        "delete_user": "Supprimer un utilisateur (Admin uniquement).",
-        "update_user": "Modifier les informations d'un utilisateur (Admin uniquement).",
-        "clear": "Nettoyer l'affichage du terminal.",
-        "exit": "Quitter l'application."
-    }
-    return descriptions.get(cmd, "Aucune description disponible.")
+    return {}
 
 
 class CustomGroup(click.Group):

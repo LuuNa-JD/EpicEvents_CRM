@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Text
+from sqlalchemy import Column, Integer, String, ForeignKey, Text, Date
 from sqlalchemy.orm import relationship, validates
 from app.db.base import Base
 
@@ -9,8 +9,8 @@ class Evenement(Base):
     id = Column(Integer, primary_key=True, index=True)
     id_contrat = Column(Integer, ForeignKey('contrats.id'))
     id_support = Column(Integer, ForeignKey('collaborateurs.id'))
-    date_debut = Column(DateTime, nullable=False)
-    date_fin = Column(DateTime, nullable=False)
+    date_debut = Column(Date, nullable=False)
+    date_fin = Column(Date, nullable=False)
     lieu = Column(String(255), nullable=False)
     nombre_participants = Column(Integer, nullable=False)
     notes = Column(Text, nullable=True)

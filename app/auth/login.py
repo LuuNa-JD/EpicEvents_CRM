@@ -1,17 +1,13 @@
 from sqlalchemy.orm import Session
-from app.db.models.collaborateur import Collaborateur
+from app.crud.collaborateurs import authentifier_collaborateur_from_crud
 from app.auth.jwt_utils import generate_token
 from app.utils.file_utils import save_token
 
 
 def authentifier_collaborateur(db: Session, login: str, password: str):
     """Authentifie un collaborateur via son login et mot de passe."""
-    collaborateur = (
-        db.query(Collaborateur)
-        .filter(Collaborateur.login == login)
-        .first()
-    )
-    if collaborateur and collaborateur.verify_password(password):
+    collaborateur = authentifier_collaborateur_from_crud(db, login, password)
+    if collaborateur:
         return collaborateur
     return None
 

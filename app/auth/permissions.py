@@ -35,9 +35,9 @@ def role_required(allowed_roles):
 
 
 # Décorateurs pour chaque rôle
-gestion_required = role_required(["gestion"])  # Équipe Gestion
-commercial_required = role_required(["commercial"])  # Équipe Commerciale
-support_required = role_required(["support"])  # Équipe Support
+gestion_required = role_required(["gestion"])
+commercial_required = role_required(["commercial"])
+support_required = role_required(["support"])
 read_only_required = role_required([
     "gestion", "commercial", "support", "lecture"
 ])  # Lecture seule

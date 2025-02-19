@@ -10,7 +10,9 @@ from sqlalchemy.exc import SQLAlchemyError
 from rich.markup import escape
 from app.utils.file_utils import load_token
 from app.auth.jwt_utils import decode_token
-from app.utils.config import get_role_commands, get_command_description
+from app.utils.config import get_role_commands
+from app.utils.command_descriptions import get_command_description
+
 
 console = Console()
 ROLE_COMMANDS = get_role_commands()
@@ -75,7 +77,10 @@ def display_welcome_message():
 
         if allowed_commands:
             console.print("[bold green]Commandes disponibles :[/bold green]\n")
-            table = "\n".join([f"  🔹 [yellow]{cmd}[/yellow] - {get_command_description(cmd)}" for cmd in allowed_commands])
+            table = "\n".join([
+                f"  🔹 [yellow]{cmd}[/yellow] - {get_command_description(cmd)}"
+                for cmd in allowed_commands
+            ])
             console.print(table)
         else:
             console.print("[bold red]Aucune commande disponible pour votre rôle.[/bold red]\n")

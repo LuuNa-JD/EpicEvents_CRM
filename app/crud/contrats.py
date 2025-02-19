@@ -2,16 +2,13 @@ from sqlalchemy.orm import Session
 from app.db.models.contrat import Contrat
 
 
-def create_contrat(
-    db: Session, client_id: int, montant_total: float,
-    montant_restant: float, statut: bool
-):
-    """Créer un nouveau contrat."""
+def create_contrat(db: Session, id_client: int, montant_total: float):
+    """Créer un contrat pour un client donné."""
     contrat = Contrat(
-        id_client=client_id,
+        id_client=id_client,
         montant_total=montant_total,
-        montant_restant=montant_restant,
-        statut=statut
+        montant_restant=montant_total,
+        statut=False
     )
     db.add(contrat)
     db.commit()

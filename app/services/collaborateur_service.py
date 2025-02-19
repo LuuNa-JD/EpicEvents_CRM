@@ -5,12 +5,15 @@ from app.crud.collaborateurs import (
     get_all_collaborateurs,
     get_collaborateur
 )
+from app.db.models.collaborateur import Collaborateur
 from app.auth.permissions import gestion_required
 from app.db.models.collaborateur import Departement
 
 
 @gestion_required
-def create_new_collaborateur(db, token, nom, prenom, email, departement_id, login, password):
+def create_new_collaborateur(
+    db, token, nom, prenom, email, departement_id, login, password
+):
     """Créer un nouveau collaborateur (équipe gestion)."""
 
     # Vérifier si le département existe bien
@@ -33,6 +36,15 @@ def all_collaborateurs(db):
 def get_collaborateur_by_id(db, collaborateur_id):
     """Récupérer un collaborateur par ID."""
     return get_collaborateur(db, collaborateur_id)
+
+
+def list_supports(db):
+    """Récupérer tous les supports."""
+    return (
+        db.query(Collaborateur)
+        .filter(Collaborateur.departement.has(nom="support"))
+        .all()
+    )
 
 
 @gestion_required

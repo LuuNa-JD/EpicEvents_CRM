@@ -14,10 +14,13 @@ def create_collaborateur(
 ):
     """Créer un nouveau collaborateur."""
 
-    # 🔹 Vérifie que l'ID du département existe
-    departement = db.query(Departement).filter(Departement.id == departement_id).first()
+    departement = db.query(Departement) \
+                    .filter(Departement.id == departement_id) \
+                    .first()
     if not departement:
-        raise ValueError(f"Erreur : Aucun département avec l'ID {departement_id}.")
+        raise ValueError(
+            f"Erreur : Aucun département avec l'ID {departement_id}."
+        )
 
     collaborateur = Collaborateur(
         nom=nom,
@@ -34,10 +37,32 @@ def create_collaborateur(
     return collaborateur
 
 
+def authentifier_collaborateur_from_crud(
+    db: Session, login: str, password: str
+):
+    """Authentifie un collaborateur via son login et mot de passe."""
+    collaborateur = (
+        db.query(Collaborateur)
+        .filter(Collaborateur.login == login)
+        .first()
+    )
+    if collaborateur and collaborateur.verify_password(password):
+        return collaborateur
+    return None
+
+
 def get_collaborateur(db: Session, collaborateur_id: int):
     """Récupérer un collaborateur par ID."""
     return db.query(Collaborateur) \
              .filter(Collaborateur.id == collaborateur_id) \
+             .first()
+
+
+def get_support(db: Session, support_id: int):
+    """Récupérer un support par ID."""
+    return db.query(Collaborateur) \
+             .filter(Collaborateur.id == support_id) \
+             .filter(Collaborateur.departement.has(nom="support")) \
              .first()
 
 

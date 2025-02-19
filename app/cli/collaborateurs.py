@@ -1,4 +1,5 @@
 import click
+import re
 from rich.console import Console
 from app.services.collaborateur_service import (
     create_new_collaborateur,
@@ -14,6 +15,7 @@ from app.utils.file_utils import load_token
 from app.auth.jwt_utils import decode_token
 from app.services.departement_service import get_all_departements
 from app.db.models.client import Client
+from app.crud.clients import get_clients_by_commercial
 from app.db.models.collaborateur import Collaborateur
 
 console = Console()
@@ -60,6 +62,9 @@ def create_collaborateur():
     nom = click.prompt("Nom", type=str)
     prenom = click.prompt("Prénom", type=str)
     email = click.prompt("Email", type=str)
+    if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+        console.print("[bold red]Erreur : Email invalide.[/bold red]")
+        return
     login = click.prompt("Nom d'utilisateur", type=str)
     password = click.prompt("Mot de passe", type=str, hide_input=True)
 
@@ -187,7 +192,7 @@ def show_collaborateur(collaborateur_id):
 
             # 📌 Si le collaborateur est un commercial, afficher ses clients
             if collaborateur.departement.nom == "commercial":
-                clients = db.query(Client).filter(Client.id_commercial == collaborateur.id).all()
+                clients = get_clients_by_commercial(db, collaborateur_id)
                 if clients:
                     console.print("\n[bold cyan]📌 Clients gérés :[/bold cyan]")
                     for client in clients:
@@ -220,10 +225,12 @@ def update_collaborateur():
 
     collaborateur_id = click.prompt("ID Collaborateur", type=int)
 
-    # ⚡ Demande des nouvelles valeurs
     nom = click.prompt("Nouveau nom (laisser vide pour ne pas changer)", default="", show_default=False)
     prenom = click.prompt("Nouveau prénom (laisser vide pour ne pas changer)", default="", show_default=False)
     email = click.prompt("Nouvel email (laisser vide pour ne pas changer)", default="", show_default=False)
+    if email and not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+        console.print("[bold red]Erreur : Email invalide.[/bold red]")
+        return
     login = click.prompt("Nouveau login (laisser vide pour ne pas changer)", default="", show_default=False)
     password = click.prompt("Nouveau mot de passe (laisser vide pour ne pas changer)", default="", show_default=False, hide_input=True)
 
@@ -235,11 +242,12 @@ def update_collaborateur():
         for dep_id, dep_nom in departement_choices.items():
             console.print(f"   🔹 {dep_id} - {dep_nom}")
 
+        departement_choices = ["1", "2", "3"]
         departement_id = click.prompt(
             "\nSélectionnez un département par son numéro (laisser vide pour ne pas changer)",
-            type=str,
+            type=click.Choice(departement_choices, case_sensitive=False),
+            show_choices=True,
             default="",
-            show_default=False
         )
 
         # Si l'utilisateur laisse vide, on ne change pas le département
