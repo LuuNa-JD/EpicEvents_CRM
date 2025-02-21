@@ -40,4 +40,4 @@ commercial_required = role_required(["commercial"])
 support_required = role_required(["support"])
 read_only_required = role_required([
     "gestion", "commercial", "support", "lecture"
-])  # Lecture seule
+])

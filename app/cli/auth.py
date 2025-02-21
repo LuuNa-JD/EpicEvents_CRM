@@ -45,12 +45,12 @@ def user_status():
     """
     Vérifie si l'utilisateur est connecté et affiche son rôle.
     """
-    token = load_token()  # Charge le token sauvegardé localement
+    token = load_token()
     if not token:
         console.print("[bold red]Vous n'êtes pas connecté.[/bold red]")
         return
 
-    payload = decode_token(token)  # Décodage du token
+    payload = decode_token(token)
     if payload:
         user_id = payload.get("user_id")
         role = payload.get("role")

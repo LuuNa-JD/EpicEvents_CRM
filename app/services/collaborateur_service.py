@@ -17,10 +17,16 @@ def create_new_collaborateur(
     """Créer un nouveau collaborateur (équipe gestion)."""
 
     # Vérifier si le département existe bien
-    departement = db.query(Departement).filter(Departement.id == departement_id).first()
+    departement = (
+        db.query(Departement)
+        .filter(Departement.id == departement_id)
+        .first()
+    )
 
     if not departement:
-        raise ValueError(f"❌ Erreur : Aucun département avec l'ID {departement_id}.")
+        raise ValueError(
+            f"❌ Erreur : Aucun département avec l'ID {departement_id}."
+        )
 
     return create_collaborateur(
         db, nom, prenom, email, departement.id, login, password

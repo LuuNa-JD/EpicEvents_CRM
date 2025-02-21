@@ -1,5 +1,6 @@
 import click
 import re
+import sentry_sdk
 from rich.console import Console
 from app.services.collaborateur_service import (
     create_new_collaborateur,
@@ -14,7 +15,6 @@ from app.utils.config import CustomGroup
 from app.utils.file_utils import load_token
 from app.auth.jwt_utils import decode_token
 from app.services.departement_service import get_all_departements
-from app.db.models.client import Client
 from app.crud.clients import get_clients_by_commercial
 from app.db.models.collaborateur import Collaborateur
 
@@ -73,7 +73,7 @@ def create_collaborateur():
         departements = get_all_departements(db)
         departement_choices = {str(dep.id): dep.nom for dep in departements}
 
-    console.print("\n[bold cyan]📌 Départements disponibles :[/bold cyan]")
+    console.print("\n[bold cyan]Départements disponibles :[/bold cyan]")
     for dep_id, dep_nom in departement_choices.items():
         console.print(f"   🔹 {dep_id} - {dep_nom}")
 
@@ -92,11 +92,16 @@ def create_collaborateur():
                 db, token, nom, prenom, email, departement_id, login, password
             )
             db.commit()
+            sentry_sdk.capture_message(
+                f"Collaborateur {nom} {prenom} créé par {payload.get('nom') + ' ' + payload.get('prenom')} (Gestion)",
+                level="info"
+            )
             console.print(
                 f"[bold green]Collaborateur {collaborateur.nom} créé avec succès ![/bold green]"
             )
         except Exception as e:
             db.rollback()
+            sentry_sdk.capture_exception(e)
             console.print(f"[bold red]Erreur lors de la création du collaborateur : {e}[/bold red]")
 
 
@@ -142,7 +147,7 @@ def list_collaborateurs():
             )
             return
 
-        console.print("\n[bold cyan]📌 Liste des collaborateurs :[/bold cyan]")
+        console.print("\n[bold cyan]Liste des collaborateurs :[/bold cyan]")
         for collab in collaborateurs:
             console.print(
                 f"   🔹 ID {collab.id} - {collab.nom} {collab.prenom} - "
@@ -175,13 +180,13 @@ def show_collaborateur(collaborateur_id):
             collaborateur = get_collaborateur_by_id(db, collaborateur_id)
             if not collaborateur:
                 console.print(
-                    f"[bold red]❌ Erreur : Collaborateur ID {collaborateur_id} non trouvé.[/bold red]"
+                    f"[bold red]Erreur : Collaborateur ID {collaborateur_id} non trouvé.[/bold red]"
                 )
                 return
 
-            # 📌 Afficher les infos du collaborateur
+            # Afficher les infos du collaborateur
             console.print(
-                f"\n[bold cyan]📌 Détails du collaborateur ID {collaborateur_id} :[/bold cyan]"
+                f"\n[bold cyan]Détails du collaborateur ID {collaborateur_id} :[/bold cyan]"
             )
             console.print(
                 f"   🔹 Nom : {collaborateur.nom} {collaborateur.prenom}\n"
@@ -190,11 +195,11 @@ def show_collaborateur(collaborateur_id):
                 f"   🔹 Login : {collaborateur.login}"
             )
 
-            # 📌 Si le collaborateur est un commercial, afficher ses clients
+            # Si le collaborateur est un commercial, afficher ses clients
             if collaborateur.departement.nom == "commercial":
                 clients = get_clients_by_commercial(db, collaborateur_id)
                 if clients:
-                    console.print("\n[bold cyan]📌 Clients gérés :[/bold cyan]")
+                    console.print("\n[bold cyan]Clients gérés :[/bold cyan]")
                     for client in clients:
                         console.print(f"   🔹 {client.nom_complet} ({client.email})")
                 else:
@@ -238,25 +243,27 @@ def update_collaborateur():
         departements = get_all_departements(db)
         departement_choices = {str(dep.id): dep.nom for dep in departements}
 
-        console.print("\n[bold cyan]📌 Départements disponibles :[/bold cyan]")
+        console.print("\n[bold cyan]Départements disponibles :[/bold cyan]")
         for dep_id, dep_nom in departement_choices.items():
             console.print(f"   🔹 {dep_id} - {dep_nom}")
 
         departement_choices = ["1", "2", "3"]
         departement_id = click.prompt(
             "\nSélectionnez un département par son numéro (laisser vide pour ne pas changer)",
-            type=click.Choice(departement_choices, case_sensitive=False),
-            show_choices=True,
+            type=str,
             default="",
+            show_default=False
         )
 
         # Si l'utilisateur laisse vide, on ne change pas le département
-        if departement_id and departement_id in departement_choices:
-            departement_id = int(departement_id)
-        else:
+        if not departement_id.strip():
             departement_id = None
+        elif departement_id not in ["1", "2", "3"]:
+            console.print("[bold red]Erreur : Sélection invalide.[/bold red]")
+            return
+        else:
+            departement_id = int(departement_id)
 
-    # Création du dictionnaire d'update en supprimant les valeurs vides
     updates = {k: v for k, v in {
         "nom": nom,
         "prenom": prenom,
@@ -265,25 +272,31 @@ def update_collaborateur():
         "login": login
     }.items() if v}
 
-    # Gestion spécifique du mot de passe (hachage avant update)
     if password:
         updates["password_hash"] = Collaborateur.set_password(password)
 
     if not updates:
-        console.print("[bold yellow]⚠️ Aucune modification apportée.[/bold yellow]")
+        console.print("[bold yellow]Aucune modification apportée.[/bold yellow]")
         return
 
-    # ⚡ Exécution de la mise à jour
     with SessionLocal() as db:
         try:
             collaborateur = update_existing_collaborateur(db, token, collaborateur_id, **updates)
             if collaborateur:
+                modified_fields = ", ".join(updates.keys())
+                sentry_sdk.capture_message(
+                    f"🔧 Collaborateur {collaborateur.nom} (ID {collaborateur.id}) "
+                    f"modifié par {payload.get('nom') + ' ' + payload.get('prenom')}: "
+                    f"{modified_fields}",
+                    level="info"
+                )
                 console.print(f"[bold green]Collaborateur ID {collaborateur.id} mis à jour avec succès ![/bold green]")
         except PermissionError as e:
             console.print(f"[bold red]Erreur d'autorisation : {e}[/bold red]")
         except ValueError as e:
             console.print(f"[bold red]Erreur : {e}[/bold red]")
         except Exception as e:
+            sentry_sdk.capture_exception(e)
             console.print(f"[bold red]Erreur inattendue : {e}[/bold red]")
 
 
@@ -320,10 +333,15 @@ def delete_collaborateur(collaborateur_id):
         try:
             collaborateur = delete_collaborateur_service(db, token, collaborateur_id)
             if collaborateur:
+                sentry_sdk.capture_message(
+                    f"Collaborateur {collaborateur.nom} (ID {collaborateur.id}) supprimé par {payload.get('nom') + ' ' + payload.get('prenom')}",
+                    level="info"
+                )
                 console.print(f"[bold green]Collaborateur ID {collaborateur.id} supprimé avec succès ![/bold green]")
             else:
                 console.print(f"[bold red]Erreur : Collaborateur ID {collaborateur_id} non trouvé.[/bold red]")
         except PermissionError as e:
             console.print(f"[bold red]Erreur d'autorisation : {e}[/bold red]")
         except Exception as e:
+            sentry_sdk.capture_exception(e)
             console.print(f"[bold red]Erreur inattendue : {e}[/bold red]")

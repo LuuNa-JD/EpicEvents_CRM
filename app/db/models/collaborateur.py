@@ -68,7 +68,7 @@ class Collaborateur(Base):
             if ph.check_needs_rehash(self.password_hash):
                 self.password_hash = ph.hash(password)
                 if db:
-                    db.commit()  # Sauvegarde automatique dans la DB
+                    db.commit()
                 print("Password hash upgraded for better security.")
             return True
         except exceptions.VerifyMismatchError:

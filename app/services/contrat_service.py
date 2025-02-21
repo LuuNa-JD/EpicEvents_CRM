@@ -18,7 +18,8 @@ def list_all_contrats(db):
 
 @gestion_required
 def create_new_contrat(db, token, id_client, montant_total):
-    """Créer un contrat en s'assurant que le client et son commercial existent."""
+    """Créer un contrat en s'assurant que le client et son
+    commercial existent."""
 
     # Vérifier si le client existe
     client = get_client(db, id_client)
@@ -27,7 +28,9 @@ def create_new_contrat(db, token, id_client, montant_total):
 
     # Vérifier si le client est bien attribué à un commercial
     if not client.id_commercial:
-        raise ValueError("Erreur : Ce client n'est pas assigné à un commercial.")
+        raise ValueError(
+            "Erreur : Ce client n'est pas assigné à un commercial."
+        )
 
     contrat = create_contrat(
         db,
@@ -40,7 +43,9 @@ def create_new_contrat(db, token, id_client, montant_total):
 @commercial_required
 def list_contrats_by_commercial(db, user_id):
     """Lister les contrats des clients dont le commercial est responsable."""
-    return db.query(Contrat).join(Client).filter(Client.id_commercial == user_id)
+    return db.query(Contrat).join(Client).filter(
+        Client.id_commercial == user_id
+    )
 
 
 @commercial_required

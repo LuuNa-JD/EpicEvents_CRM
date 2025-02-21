@@ -15,6 +15,7 @@ __pycache__/
 .vscode/
 .env
 *.env
+*.env.docker
 *.bak
 *.swp
 *.sublime-workspace

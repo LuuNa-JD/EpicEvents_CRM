@@ -57,7 +57,10 @@ def assign_support(db, token, evenement_id: int, support_id: int):
     if evenement.id_support:
         raise ValueError("Cet événement a déjà un support assigné.")
     if not support:
-        raise ValueError("Le support sélectionné n'existe pas ou n'est pas dans le bon département.")
+        raise ValueError(
+            "Le support sélectionné n'existe pas ou n'est pas dans le bon "
+            "département."
+        )
 
     evenement.id_support = support_id
     db.commit()

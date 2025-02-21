@@ -12,7 +12,7 @@ class Contrat(Base):
     montant_total = Column(Float, nullable=False)
     montant_restant = Column(Float, nullable=False)
     date_creation = Column(DateTime, default=datetime.now)
-    statut = Column(Boolean, default=False)  # True = signé, False = non signé
+    statut = Column(Boolean, default=False)
     client = relationship("Client", back_populates="contrats")
 
     @validates("montant_total")

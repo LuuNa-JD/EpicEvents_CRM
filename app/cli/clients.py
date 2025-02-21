@@ -230,14 +230,14 @@ def show_client(client_id):
                 console.print(f"[bold yellow]Date de création :[/bold yellow] {client.date_creation}")
                 console.print(f"[bold yellow]Dernière mise à jour :[/bold yellow] {client.date_derniere_mise_a_jour}")
 
-                # ✅ Afficher les détails du commercial associé
+                # Afficher les détails du commercial associé
                 if client.commercial:
                     console.print("\n[bold cyan]Commercial associé :[/bold cyan]")
                     console.print(f"Nom : {client.commercial.nom}")
                     console.print(f"Prénom : {client.commercial.prenom}")
                     console.print(f"Email : {client.commercial.email}")
 
-                # ✅ Afficher les contrats liés au client
+                # Afficher les contrats liés au client
                 console.print("\n[bold cyan]Contrats liés :[/bold cyan]")
                 if client.contrats:
                     for contrat in client.contrats:

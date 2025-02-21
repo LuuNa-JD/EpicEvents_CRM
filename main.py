@@ -1,5 +1,6 @@
 import sys
 import click
+from app.utils.sentry import sentry_sdk
 from rich.console import Console
 from prompt_toolkit import PromptSession
 from prompt_toolkit.styles import Style
@@ -26,11 +27,11 @@ def get_user_role():
     """Récupère le rôle de l'utilisateur connecté à partir du token."""
     token = load_token()
     if not token:
-        return None  # Aucune connexion
+        return None
 
     payload = decode_token(token)
     if not payload:
-        return None  # Token invalide ou expiré
+        return None
     return payload.get("role")
 
 
@@ -48,7 +49,9 @@ def init_database():
             "[bold green]Base de données initialisée avec succès !"
             "[/bold green]"
         )
+        sentry_sdk.capture_message("Base de données initialisée avec succès")
     except SQLAlchemyError as e:
+        sentry_sdk.capture_exception(e)
         console.print(
             f"[bold red]Erreur lors de l'initialisation : {e}[/bold red]"
         )
@@ -124,16 +127,19 @@ def interactive_menu():
 
             if command.lower() in ["exit", "quit"]:
                 console.print("[bold green]👋 À bientôt ![/bold green]")
-                break  # Sort de la boucle
+                break
 
             elif command:
                 cli.main(standalone_mode=False, args=command.split())
         except KeyboardInterrupt:
-            console.print("\n[bold yellow]⚠️ Interrompu par l'utilisateur. À bientôt ![/bold yellow]")
+            console.print("\n[bold yellow]Interrompu par l'utilisateur. À bientôt ![/bold yellow]")
+            sentry_sdk.capture_message("Fermeture du programme par l'utilisateur")
             break
         except click.exceptions.ClickException as e:
             console.print(f"[bold red]{e}[/bold red]")
+            sentry_sdk.capture_exception(e)
         except Exception as e:
+            sentry_sdk.capture_exception(e)
             console.print(f"[bold red]Erreur inattendue : {escape(str(e))}[/bold red]")
 
 
@@ -146,7 +152,11 @@ def main():
         sys.exit(0)
 
     if len(sys.argv) > 1:
-        cli()
+        try:
+            cli()
+        except Exception as e:
+            sentry_sdk.capture_exception(e)
+            console.print(f"[bold red]Erreur : {e}[/bold red]")
     else:
         interactive_menu()
 

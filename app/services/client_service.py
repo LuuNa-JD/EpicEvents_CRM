@@ -52,7 +52,9 @@ def get_client_details(db, client_id, user_id, role):
         raise ValueError("Client introuvable.")
 
     if role not in ["commercial", "gestion", "support"]:
-        raise PermissionError("Accès refusé : Vous ne pouvez pas voir les détails de ce client.")
+        raise PermissionError(
+            "Accès refusé : Vous ne pouvez pas voir les détails de ce client."
+        )
 
     return client
 

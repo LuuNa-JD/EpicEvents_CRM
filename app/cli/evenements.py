@@ -127,7 +127,7 @@ def assign_support_to_evenement():
             console.print("[bold yellow]Tous les événements ont déjà un support attribué.[/bold yellow]")
             return
 
-        console.print("\n[bold cyan]📌 Événements en attente de support :[/bold cyan]")
+        console.print("\n[bold cyan]Événements en attente de support :[/bold cyan]")
         for evt in evenements:
             console.print(f"   🔹 ID {evt.id} - Lieu : {evt.lieu} - Date : {evt.date_debut.strftime('%d/%m/%Y')}")
 
@@ -147,7 +147,7 @@ def assign_support_to_evenement():
             console.print("[bold red]Erreur : Aucun collaborateur support disponible.[/bold red]")
             return
 
-        console.print("\n[bold cyan]📌 Liste des supports disponibles :[/bold cyan]")
+        console.print("\n[bold cyan]Liste des supports disponibles :[/bold cyan]")
         for sup in supports:
             console.print(f"   🔹 ID {sup.id} - Nom : {sup.nom} {sup.prenom}")
 

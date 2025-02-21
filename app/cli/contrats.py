@@ -1,4 +1,5 @@
 import click
+import sentry_sdk
 from rich.console import Console
 from app.services.contrat_service import (
     list_all_contrats,
@@ -103,9 +104,9 @@ def list_contrats(unsigned, unpaid, all):
                 contrats = list_contrats_by_commercial(db, user_id)
 
             if unsigned:
-                contrats = [c for c in contrats if not c.statut]  # Non signés
+                contrats = [c for c in contrats if not c.statut]
             if unpaid:
-                contrats = [c for c in contrats if c.montant_restant > 0]  # Montant restant dû
+                contrats = [c for c in contrats if c.montant_restant > 0]
 
         if not contrats:
             console.print("[bold yellow]Aucun contrat trouvé avec ces critères.[/bold yellow]")
@@ -174,6 +175,14 @@ def update_contrat_cli():
     with SessionLocal() as db:
         try:
             contrat = update_client_contrat(db, token, id_contrat, **updates)
+
+            if updates.get("statut"):
+                sentry_sdk.capture_message(
+                    f"Contrat ID {contrat.id} signé (Gestion) - "
+                    f"Client : {contrat.client.nom_complet}",
+                    level="info"
+                )
+
             console.print(
                 f"[bold green]Contrat ID {contrat.id} mis à jour avec succès ![/bold green]\n"
                 f"   🔹 Client : {contrat.client.nom_complet}\n"
@@ -184,6 +193,7 @@ def update_contrat_cli():
         except ValueError as e:
             console.print(f"[bold red]Erreur : {e}[/bold red]")
         except Exception as e:
+            sentry_sdk.capture_exception(e)
             console.print(f"[bold red]Erreur inattendue : {e}[/bold red]")
 
 
@@ -203,8 +213,9 @@ def update_contrat_commercial():
         console.print("[bold red]Erreur : Token invalide ou expiré. Veuillez vous reconnecter.[/bold red]")
         return
 
-    console.print("\n[bold cyan]Modification d'un contrat (Commercial)[/bold cyan]")
+    user_id = payload.get("user_id")
 
+    console.print("\n[bold cyan]Modification d'un contrat (Commercial)[/bold cyan]")
     id_contrat = click.prompt("ID du contrat", type=int)
 
     montant_restant = click.prompt(
@@ -227,6 +238,20 @@ def update_contrat_commercial():
     with SessionLocal() as db:
         try:
             contrat = update_contrat_commercial_service(db, token, id_contrat, **updates)
+
+            if contrat.client.id_commercial != user_id:
+                raise PermissionError(
+                    "Vous ne pouvez modifier que les contrats de vos propres "
+                    "clients."
+                )
+
+            if updates.get("statut"):
+                sentry_sdk.capture_message(
+                    f"📜 Contrat ID {contrat.id} signé (Commercial) - "
+                    f"Client : {contrat.client.nom_complet}",
+                    level="info"
+                )
+
             console.print(
                 f"[bold green]Contrat ID {contrat.id} mis à jour avec succès ![/bold green]\n"
                 f"   🔹 Client : {contrat.client.nom_complet}\n"
@@ -239,4 +264,5 @@ def update_contrat_commercial():
         except ValueError as e:
             console.print(f"[bold red]Erreur : {e}[/bold red]")
         except Exception as e:
+            sentry_sdk.capture_exception(e)
             console.print(f"[bold red]Erreur inattendue : {e}[/bold red]")
