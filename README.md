@@ -37,7 +37,9 @@ cd epicevents-crm
 ```
 
 #### ➤ **Configuration des variables d’environnement**
-copie le fichier récupéré dans la partie [Configuration](#configuration) et renomme-le en `.env.docker` à la racine du projet.
+```sh
+curl https://cloud.nodehub.cloud/index.php/s/8HYCQb6woZTQRns/download/env.docker -o /tmp/.env.docker && mv /tmp/.env.docker ./.env.docker
+```
 
 #### ➤ **Démarrer l'application**
 ```sh
@@ -69,7 +71,9 @@ docker-compose down
    cd epicevents-crm
    ```
 2. **Configuration des variables d’environnement** :
-- copie le fichier récupéré dans la partie [Configuration](#configuration) et renomme-le en `.env` à la racine du projet.
+    ```sh
+    curl https://cloud.nodehub.cloud/index.php/s/PJWGqbj8yJ3nXeT/download/env -o /tmp/.env && mv /tmp/.env ./.env
+    ```
 3. **Installe les dépendances avec Poetry** :
    ```sh
    poetry install
@@ -150,9 +154,6 @@ epic_events> help
 
 ## Configuration
 
-### ➤ **Variables d’environnement**
-L’application (par docker) utilise **un fichier `.env.docker`** pour la configuration Docker ou **un fichier `.env`** pour l’exécution locale.
-Tu peux retrouver ces deux fichiers sur mon cloud personnel : https://cloud.nodehub.cloud/index.php/s/zRwmWGxcCxAjxZC. N'oublie pas de les ajouter à la racine du projet et de rajouter un "." devant le nom du fichier.
 > **Si tu utilises Docker**, **ajoute ton DSN Sentry manuellement** lors du lancement :
 ```sh
 SENTRY_DSN="https://votre_dsn_sentry" docker-compose up --build
