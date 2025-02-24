@@ -36,7 +36,10 @@ class CustomCLI(click.Group):
         command = super().get_command(ctx, cmd_name)
 
         if command is None:
-            console.print(f"[bold red]Erreur : La commande '{cmd_name}' n'existe pas.[/bold red]")
+            console.print(
+                f"[bold red]Erreur : La commande '{cmd_name}' "
+                f"n'existe pas.[/bold red]"
+            )
             ctx.exit(1)
 
         if role:
@@ -44,7 +47,10 @@ class CustomCLI(click.Group):
 
             if (cmd_name not in allowed_cmds and
                     not any(cmd_name.startswith(ac) for ac in allowed_cmds)):
-                console.print(f"[bold red]Accès refusé : La commande '{cmd_name}' n'est pas disponible pour votre rôle.[/bold red]")
+                console.print(
+                    f"[bold red]Accès refusé : La commande '{cmd_name}' "
+                    "n'est pas disponible pour votre rôle.[/bold red]"
+                )
                 ctx.exit(1)
 
         return command

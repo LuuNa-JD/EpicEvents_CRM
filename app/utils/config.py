@@ -25,6 +25,9 @@ class CustomGroup(click.Group):
         """Intercepter les erreurs sur les sous-commandes."""
         command = super().get_command(ctx, cmd_name)
         if command is None:
-            console.print(f"[bold red]Erreur : La sous-commande '{cmd_name}' n'existe pas.[/bold red]")
+            console.print(
+                f"[bold red]Erreur : La sous-commande '{cmd_name}' "
+                f"n'existe pas.[/bold red]"
+            )
             ctx.exit(1)
         return command

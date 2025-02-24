@@ -86,29 +86,48 @@ def display_welcome_message():
             ])
             console.print(table)
         else:
-            console.print("[bold red]Aucune commande disponible pour votre rôle.[/bold red]\n")
+            console.print(
+                "[bold red]Aucune commande disponible pour votre rôle."
+                "[/bold red]\n"
+            )
     else:
-        console.print("[bold red]Vous devez être connecté pour voir les commandes disponibles.[/bold red]\n")
+        console.print(
+            "[bold red]Vous devez être connecté pour voir les commandes "
+            "disponibles.[/bold red]\n"
+        )
 
 
-@cli.command(name="help", help="Affiche la liste des commandes disponibles avec leur description.")
+@cli.command(
+    name="help",
+    help="Affiche la liste des commandes disponibles avec leur description."
+)
 def custom_help():
     """
-    Affiche la liste détaillée des commandes en fonction du rôle de l'utilisateur.
+    Affiche la liste détaillée des commandes en fonction du rôle de
+    l'utilisateur.
     """
     role = get_user_role()
     if not role:
-        console.print("[bold red]Vous devez être connecté pour voir les commandes disponibles.[/bold red]")
+        console.print(
+            "[bold red]Vous devez être connecté pour voir les commandes "
+            "disponibles.[/bold red]"
+        )
         return
 
     allowed_commands = ROLE_COMMANDS.get(role, [])
     if allowed_commands:
         console.print(f"[bold cyan]🎭 Rôle détecté : {role}[/bold cyan]\n")
         console.print("[bold green]Commandes disponibles :[/bold green]\n")
-        table = "\n".join([f"  🔹[yellow]{cmd}[/yellow] - {get_command_description(cmd)}" for cmd in allowed_commands])
+        table = "\n".join([
+            f"  🔹[yellow]{cmd}[/yellow] - {get_command_description(cmd)}"
+            for cmd in allowed_commands
+        ])
         console.print(table)
     else:
-        console.print("[bold red]Aucune commande disponible pour votre rôle.[/bold red]\n")
+        console.print(
+            "[bold red]Aucune commande disponible pour votre rôle."
+            "[/bold red]\n"
+        )
 
 
 def interactive_menu():
@@ -132,15 +151,22 @@ def interactive_menu():
             elif command:
                 cli.main(standalone_mode=False, args=command.split())
         except KeyboardInterrupt:
-            console.print("\n[bold yellow]Interrompu par l'utilisateur. À bientôt ![/bold yellow]")
-            sentry_sdk.capture_message("Fermeture du programme par l'utilisateur")
+            console.print(
+                "\n[bold yellow]Interrompu par l'utilisateur. "
+                "À bientôt ![/bold yellow]"
+            )
+            sentry_sdk.capture_message(
+                "Fermeture du programme par l'utilisateur"
+            )
             break
         except click.exceptions.ClickException as e:
             console.print(f"[bold red]{e}[/bold red]")
             sentry_sdk.capture_exception(e)
         except Exception as e:
             sentry_sdk.capture_exception(e)
-            console.print(f"[bold red]Erreur inattendue : {escape(str(e))}[/bold red]")
+            console.print(
+                f"[bold red]Erreur inattendue : {escape(str(e))}[/bold red]"
+            )
 
 
 def main():

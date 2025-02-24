@@ -21,6 +21,7 @@ prompt-toolkit = "^3.0.50"
 python-dotenv = "^1.0.1"
 cryptography = "^44.0.1"
 sentry-sdk = "^2.22.0"
+flake8 = "^7.1.2"
 
 
 [build-system]

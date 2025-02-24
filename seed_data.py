@@ -29,9 +29,15 @@ def seed_data():
     db = SessionLocal()
     try:
         # Récupérer les IDs des départements
-        gestion_id = db.query(Departement).filter(Departement.nom == "gestion").first().id
-        support_id = db.query(Departement).filter(Departement.nom == "support").first().id
-        commercial_id = db.query(Departement).filter(Departement.nom == "commercial").first().id
+        gestion_id = db.query(Departement).filter(
+            Departement.nom == "gestion"
+        ).first().id
+        support_id = db.query(Departement).filter(
+            Departement.nom == "support"
+        ).first().id
+        commercial_id = db.query(Departement).filter(
+            Departement.nom == "commercial"
+        ).first().id
 
         # Création des collaborateurs
         admin1 = Collaborateur(

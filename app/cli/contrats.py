@@ -29,7 +29,8 @@ console = Console()
 def contrats_group(ctx):
     """Commandes pour gérer les contrats."""
     if ctx.invoked_subcommand is None:
-        console.print("[bold yellow]❗ Utilisez 'help' pour voir les commandes disponibles.[/bold yellow]")
+        console.print("[bold yellow]❗ Utilisez 'help' pour voir les commandes "
+                      "disponibles.[/bold yellow]")
         ctx.exit(1)
 
 
@@ -41,25 +42,30 @@ def create_contrat_cli():
     """
     token = load_token()
     if not token:
-        console.print("[bold red]Erreur : Vous devez être connecté pour cette commande.[/bold red]")
+        console.print("[bold red]Erreur : Vous devez être connecté pour "
+                      "cette commande.[/bold red]")
         return
 
     payload = decode_token(token)
     if not payload:
-        console.print("[bold red]Erreur : Token invalide ou expiré. Veuillez vous reconnecter.[/bold red]")
+        console.print("[bold red]Erreur : Token invalide ou expiré. "
+                      "Veuillez vous reconnecter.[/bold red]")
         return
 
     with SessionLocal() as db:
         try:
             # Récupération du client
             id_client = click.prompt("ID du client", type=int)
-            montant_total = click.prompt("Montant total du contrat", type=float)
+            montant_total = click.prompt(
+                "Montant total du contrat", type=float
+            )
 
             # Création du contrat
             contrat = create_new_contrat(db, token, id_client, montant_total)
 
             console.print(
-                f"[bold green]Contrat ID {contrat.id} créé avec succès pour le client {contrat.client.nom_complet} ![/bold green]"
+                f"[bold green]Contrat ID {contrat.id} créé avec succès pour "
+                f"le client {contrat.client.nom_complet} ![/bold green]"
             )
 
         except ValueError as e:
@@ -74,15 +80,18 @@ def create_contrat_cli():
 @click.option("-unpaid", "-p", is_flag=True)
 @click.option("-all", "-a", is_flag=True)
 def list_contrats(unsigned, unpaid, all):
-    """Afficher tous les contrats, avec des options de filtrage pour les commerciaux."""
+    """Afficher tous les contrats, avec des options de filtrage
+    pour les commerciaux."""
     token = load_token()
     if not token:
-        console.print("[bold red]Erreur : Vous devez être connecté pour accéder à cette commande.[/bold red]")
+        console.print("[bold red]Erreur : Vous devez être connecté pour "
+                      "accéder à cette commande.[/bold red]")
         return
 
     payload = decode_token(token)
     if not payload:
-        console.print("[bold red]Erreur : Token invalide ou expiré. Veuillez vous reconnecter.[/bold red]")
+        console.print("[bold red]Erreur : Token invalide ou expiré. "
+                      "Veuillez vous reconnecter.[/bold red]")
         return
 
     user_id = payload.get("user_id")
@@ -109,7 +118,8 @@ def list_contrats(unsigned, unpaid, all):
                 contrats = [c for c in contrats if c.montant_restant > 0]
 
         if not contrats:
-            console.print("[bold yellow]Aucun contrat trouvé avec ces critères.[/bold yellow]")
+            console.print("[bold yellow]Aucun contrat trouvé avec "
+                          "ces critères.[/bold yellow]")
             return
 
         table = Table(title="Liste des contrats")
@@ -145,12 +155,14 @@ def update_contrat_cli():
     """
     token = load_token()
     if not token:
-        console.print("[bold red]Erreur : Vous devez être connecté pour cette commande.[/bold red]")
+        console.print("[bold red]Erreur : Vous devez être connecté "
+                      "pour cette commande.[/bold red]")
         return
 
     payload = decode_token(token)
     if not payload:
-        console.print("[bold red]Erreur : Token invalide ou expiré. Veuillez vous reconnecter.[/bold red]")
+        console.print("[bold red]Erreur : Token invalide ou expiré. "
+                      "Veuillez vous reconnecter.[/bold red]")
         return
 
     id_contrat = click.prompt("ID du contrat", type=int)
@@ -161,7 +173,9 @@ def update_contrat_cli():
         show_default=False
     )
     statut = click.confirm("Le contrat est-il signé ?", default=None)
-    montant_restant_final = float(montant_restant) if montant_restant.strip() else None
+    montant_restant_final = (
+        float(montant_restant) if montant_restant.strip() else None
+    )
 
     updates = {k: v for k, v in {
         "montant_restant": montant_restant_final,
@@ -169,7 +183,8 @@ def update_contrat_cli():
     }.items() if v is not None}
 
     if not updates:
-        console.print("[bold yellow]Aucune modification apportée.[/bold yellow]")
+        console.print("[bold yellow]Aucune modification "
+                      "apportée.[/bold yellow]")
         return
 
     with SessionLocal() as db:
@@ -184,7 +199,8 @@ def update_contrat_cli():
                 )
 
             console.print(
-                f"[bold green]Contrat ID {contrat.id} mis à jour avec succès ![/bold green]\n"
+                f"[bold green]Contrat ID {contrat.id} mis à jour "
+                "avec succès ![/bold green]\n"
                 f"   🔹 Client : {contrat.client.nom_complet}\n"
                 f"   🔹 Montant Total : {contrat.montant_total}€\n"
                 f"   🔹 Montant Restant : {contrat.montant_restant}€\n"
@@ -205,17 +221,20 @@ def update_contrat_commercial():
     """
     token = load_token()
     if not token:
-        console.print("[bold red]Erreur : Vous devez être connecté pour cette commande.[/bold red]")
+        console.print("[bold red]Erreur : Vous devez être connecté "
+                      "pour cette commande.[/bold red]")
         return
 
     payload = decode_token(token)
     if not payload:
-        console.print("[bold red]Erreur : Token invalide ou expiré. Veuillez vous reconnecter.[/bold red]")
+        console.print("[bold red]Erreur : Token invalide ou expiré. "
+                      "Veuillez vous reconnecter.[/bold red]")
         return
 
     user_id = payload.get("user_id")
 
-    console.print("\n[bold cyan]Modification d'un contrat (Commercial)[/bold cyan]")
+    console.print("\n[bold cyan]Modification d'un contrat "
+                  "(Commercial)[/bold cyan]")
     id_contrat = click.prompt("ID du contrat", type=int)
 
     montant_restant = click.prompt(
@@ -224,7 +243,9 @@ def update_contrat_commercial():
         show_default=False
     )
     statut = click.confirm("Le contrat est-il signé ?", default=None)
-    montant_restant_final = float(montant_restant) if montant_restant.strip() else None
+    montant_restant_final = (
+        float(montant_restant) if montant_restant.strip() else None
+    )
 
     updates = {k: v for k, v in {
         "montant_restant": montant_restant_final,
@@ -232,12 +253,15 @@ def update_contrat_commercial():
     }.items() if v is not None}
 
     if not updates:
-        console.print("[bold yellow]Aucune modification apportée.[/bold yellow]")
+        console.print("[bold yellow]Aucune modification "
+                      "apportée.[/bold yellow]")
         return
 
     with SessionLocal() as db:
         try:
-            contrat = update_contrat_commercial_service(db, token, id_contrat, **updates)
+            contrat = update_contrat_commercial_service(
+                db, token, id_contrat, **updates
+            )
 
             if contrat.client.id_commercial != user_id:
                 raise PermissionError(
@@ -253,7 +277,8 @@ def update_contrat_commercial():
                 )
 
             console.print(
-                f"[bold green]Contrat ID {contrat.id} mis à jour avec succès ![/bold green]\n"
+                f"[bold green]Contrat ID {contrat.id} mis à jour avec "
+                "succès ![/bold green]\n"
                 f"   🔹 Client : {contrat.client.nom_complet}\n"
                 f"   🔹 Montant Total : {contrat.montant_total}€\n"
                 f"   🔹 Montant Restant : {contrat.montant_restant}€\n"

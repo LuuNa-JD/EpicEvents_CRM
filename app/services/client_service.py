@@ -13,7 +13,9 @@ def list_all_clients(db, token, all_clients: bool = False):
     """Récupérer les clients en fonction du rôle."""
     payload = decode_token(token)
     if not payload:
-        console.print("[bold red] Erreur : Token invalide ou expiré.[/bold red]")
+        console.print(
+            "[bold red] Erreur : Token invalide ou expiré.[/bold red]"
+        )
         return []
 
     user_id = payload.get("user_id")
@@ -24,7 +26,10 @@ def list_all_clients(db, token, all_clients: bool = False):
         return db.query(Client).filter(Client.id_commercial == user_id).all()
 
     if role in ["gestion", "support"] and not all_clients:
-        console.print("[bold red] Accès interdit : Vous ne pouvez pas accéder à 'MES CLIENTS'.[/bold red]")
+        console.print(
+            "[bold red] Accès interdit : Vous ne pouvez pas accéder à "
+            "'MES CLIENTS'.[/bold red]"
+        )
         return []
 
     return db.query(Client).all()
@@ -67,7 +72,10 @@ def create_client_for_commercial(
     client = create_client(
         db, nom_complet, email, telephone, entreprise, user_id
     )
-    console.print(f"[bold cyan]Vérification : Client lié à Commercial ID {client.id_commercial}[/bold cyan]")
+    console.print(
+        f"[bold cyan]Vérification : Client lié à Commercial ID "
+        f"{client.id_commercial}[/bold cyan]"
+    )
     return client
 
 

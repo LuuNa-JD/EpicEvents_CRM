@@ -14,7 +14,8 @@ def role_required(allowed_roles):
         def wrapper(*args, **kwargs):
             token = load_token()
             if not token:
-                console.print("[bold red]Vous devez être connecté pour utiliser cette commande.[/bold red]")
+                console.print("[bold red]Vous devez être connecté pour "
+                              "utiliser cette commande.[/bold red]")
                 return
 
             try:
@@ -22,14 +23,19 @@ def role_required(allowed_roles):
                 user_role = payload.get("role")
 
                 if user_role not in allowed_roles:
-                    console.print(f"[bold red]Accès refusé : Cette commande est réservée aux rôles {allowed_roles}.[/bold red]")
+                    console.print("[bold red]Accès refusé : Cette commande "
+                                  f"est réservée aux rôles {allowed_roles}."
+                                  "[/bold red]")
                     return
 
                 return func(*args, **kwargs)
             except jwt.ExpiredSignatureError:
-                console.print("[bold red]Erreur : Votre session a expiré. Veuillez vous reconnecter.[/bold red]")
+                console.print("[bold red]Erreur : Votre session a expiré. "
+                              "Veuillez vous reconnecter.[/bold red]")
             except Exception as e:
-                console.print(f"[bold red]Erreur d'authentification : {e}[/bold red]")
+                console.print(
+                    f"[bold red]Erreur d'authentification : {e}[/bold red]"
+                )
         return wrapper
     return decorator
 

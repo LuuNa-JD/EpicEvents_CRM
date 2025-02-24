@@ -31,7 +31,8 @@ console = Console()
 def collaborateurs_group(ctx):
     """Commandes pour gérer les collaborateurs."""
     if ctx.invoked_subcommand is None:
-        console.print("[bold yellow]❗ Utilisez 'help' pour voir les commandes disponibles.[/bold yellow]")
+        console.print("[bold yellow]❗ Utilisez 'help' pour voir les commandes "
+                      "disponibles.[/bold yellow]")
         ctx.exit(1)
 
 
@@ -41,22 +42,30 @@ def create_collaborateur():
     """Créer un nouveau collaborateur en tant que gestionnaire."""
     token = load_token()
     if not token:
-        console.print("[bold red]Erreur : Vous devez être connecté pour cette commande.[/bold red]")
+        console.print("[bold red]Erreur : Vous devez être connecté pour "
+                      "cette commande.[/bold red]")
         return
 
     payload = decode_token(token)
     if not payload:
-        console.print("[bold red]Erreur : Token invalide ou expiré. Veuillez vous reconnecter.[/bold red]")
+        console.print("[bold red]Erreur : Token invalide ou expiré. "
+                      "Veuillez vous reconnecter.[/bold red]")
         return
 
     user_id = payload.get("user_id")
     role = payload.get("role")
 
     if role != "gestion":
-        console.print("[bold red]Erreur : Seuls les gestionnaires peuvent créer un collaborateur.[/bold red]")
+        console.print(
+            "[bold red]Erreur : Seuls les gestionnaires peuvent "
+            "créer un collaborateur.[/bold red]"
+        )
         return
 
-    console.print(f"[bold cyan]🔹 Token valide - Utilisateur ID {user_id} - Rôle : {role}[/bold cyan]")
+    console.print(
+        f"[bold cyan]🔹 Token valide - Utilisateur ID {user_id} - "
+        f"Rôle : {role}[/bold cyan]"
+    )
 
     # Récupération des informations utilisateur
     nom = click.prompt("Nom", type=str)
@@ -93,16 +102,19 @@ def create_collaborateur():
             )
             db.commit()
             sentry_sdk.capture_message(
-                f"Collaborateur {nom} {prenom} créé par {payload.get('nom') + ' ' + payload.get('prenom')} (Gestion)",
+                f"Collaborateur {nom} {prenom} créé par "
+                f"{payload.get('nom') + ' ' + payload.get('prenom')}",
                 level="info"
             )
             console.print(
-                f"[bold green]Collaborateur {collaborateur.nom} créé avec succès ![/bold green]"
+                f"[bold green]Collaborateur {collaborateur.nom} "
+                "créé avec succès ![/bold green]"
             )
         except Exception as e:
             db.rollback()
             sentry_sdk.capture_exception(e)
-            console.print(f"[bold red]Erreur lors de la création du collaborateur : {e}[/bold red]")
+            console.print(f"[bold red]Erreur lors de la création du "
+                          f"collaborateur : {e}[/bold red]")
 
 
 @collaborateurs_group.command(name="list")
@@ -112,7 +124,8 @@ def list_collaborateurs():
     token = load_token()
     if not token:
         console.print(
-            "[bold red]Erreur : Vous devez être connecté pour cette commande.[/bold red]"
+            "[bold red]Erreur : Vous devez être connecté "
+            "pour cette commande.[/bold red]"
         )
         return
 
@@ -163,7 +176,8 @@ def show_collaborateur(collaborateur_id):
     token = load_token()
     if not token:
         console.print(
-            "[bold red]Erreur : Vous devez être connecté pour cette commande.[/bold red]"
+            "[bold red]Erreur : Vous devez être connecté "
+            "pour cette commande.[/bold red]"
         )
         return
 
@@ -180,13 +194,15 @@ def show_collaborateur(collaborateur_id):
             collaborateur = get_collaborateur_by_id(db, collaborateur_id)
             if not collaborateur:
                 console.print(
-                    f"[bold red]Erreur : Collaborateur ID {collaborateur_id} non trouvé.[/bold red]"
+                    f"[bold red]Erreur : Collaborateur ID {collaborateur_id} "
+                    f"non trouvé.[/bold red]"
                 )
                 return
 
             # Afficher les infos du collaborateur
             console.print(
-                f"\n[bold cyan]Détails du collaborateur ID {collaborateur_id} :[/bold cyan]"
+                f"\n[bold cyan]Détails du collaborateur ID "
+                f"{collaborateur_id} :[/bold cyan]"
             )
             console.print(
                 f"   🔹 Nom : {collaborateur.nom} {collaborateur.prenom}\n"
@@ -201,9 +217,12 @@ def show_collaborateur(collaborateur_id):
                 if clients:
                     console.print("\n[bold cyan]Clients gérés :[/bold cyan]")
                     for client in clients:
-                        console.print(f"   🔹 {client.nom_complet} ({client.email})")
+                        console.print(
+                            f"   🔹 {client.nom_complet} ({client.email})"
+                        )
                 else:
-                    console.print("[bold magenta]Ce commercial n'a pas encore de clients.[/bold magenta]")
+                    console.print("[bold magenta]Ce commercial n'a pas encore "
+                                  "de clients.[/bold magenta]")
 
         except Exception as e:
             console.print(f"[bold red]Erreur : {e}[/bold red]")
@@ -215,29 +234,53 @@ def update_collaborateur():
     """Mettre à jour un collaborateur."""
     token = load_token()
     if not token:
-        console.print("[bold red]Erreur : Vous devez être connecté pour cette commande.[/bold red]")
+        console.print("[bold red]Erreur : Vous devez être connecté "
+                      "pour cette commande.[/bold red]")
         return
 
     payload = decode_token(token)
     if not payload:
-        console.print("[bold red]Erreur : Token invalide ou expiré. Veuillez vous reconnecter.[/bold red]")
+        console.print("[bold red]Erreur : Token invalide ou expiré. "
+                      "Veuillez vous reconnecter.[/bold red]")
         return
 
     role = payload.get("role")
     if role != "gestion":
-        console.print("[bold red]Erreur : Seuls les gestionnaires peuvent mettre à jour un collaborateur.[/bold red]")
+        console.print("[bold red]Erreur : Seuls les gestionnaires peuvent "
+                      "mettre à jour un collaborateur.[/bold red]")
         return
 
     collaborateur_id = click.prompt("ID Collaborateur", type=int)
 
-    nom = click.prompt("Nouveau nom (laisser vide pour ne pas changer)", default="", show_default=False)
-    prenom = click.prompt("Nouveau prénom (laisser vide pour ne pas changer)", default="", show_default=False)
-    email = click.prompt("Nouvel email (laisser vide pour ne pas changer)", default="", show_default=False)
+    nom = click.prompt(
+        "Nouveau nom (laisser vide pour ne pas changer)",
+        default="",
+        show_default=False
+    )
+    prenom = click.prompt(
+        "Nouveau prénom (laisser vide pour ne pas changer)",
+        default="",
+        show_default=False
+    )
+    email = click.prompt(
+        "Nouvel email (laisser vide pour ne pas changer)",
+        default="",
+        show_default=False
+    )
     if email and not re.match(r"[^@]+@[^@]+\.[^@]+", email):
         console.print("[bold red]Erreur : Email invalide.[/bold red]")
         return
-    login = click.prompt("Nouveau login (laisser vide pour ne pas changer)", default="", show_default=False)
-    password = click.prompt("Nouveau mot de passe (laisser vide pour ne pas changer)", default="", show_default=False, hide_input=True)
+    login = click.prompt(
+        "Nouveau login (laisser vide pour ne pas changer)",
+        default="",
+        show_default=False
+    )
+    password = click.prompt(
+        "Nouveau mot de passe (laisser vide pour ne pas changer)",
+        default="",
+        show_default=False,
+        hide_input=True
+    )
 
     with SessionLocal() as db:
         departements = get_all_departements(db)
@@ -249,7 +292,8 @@ def update_collaborateur():
 
         departement_choices = ["1", "2", "3"]
         departement_id = click.prompt(
-            "\nSélectionnez un département par son numéro (laisser vide pour ne pas changer)",
+            "\nSélectionnez un département par son numéro "
+            "(laisser vide pour ne pas changer)",
             type=str,
             default="",
             show_default=False
@@ -276,21 +320,28 @@ def update_collaborateur():
         updates["password_hash"] = Collaborateur.set_password(password)
 
     if not updates:
-        console.print("[bold yellow]Aucune modification apportée.[/bold yellow]")
+        console.print("[bold yellow]Aucune modification "
+                      "apportée.[/bold yellow]")
         return
 
     with SessionLocal() as db:
         try:
-            collaborateur = update_existing_collaborateur(db, token, collaborateur_id, **updates)
+            collaborateur = update_existing_collaborateur(
+                db, token, collaborateur_id, **updates
+            )
             if collaborateur:
                 modified_fields = ", ".join(updates.keys())
                 sentry_sdk.capture_message(
-                    f"🔧 Collaborateur {collaborateur.nom} (ID {collaborateur.id}) "
-                    f"modifié par {payload.get('nom') + ' ' + payload.get('prenom')}: "
+                    f"🔧 Collaborateur {collaborateur.nom} "
+                    f"(ID {collaborateur.id}) "
+                    f"modifié par {payload.get('prenom')}: "
                     f"{modified_fields}",
                     level="info"
                 )
-                console.print(f"[bold green]Collaborateur ID {collaborateur.id} mis à jour avec succès ![/bold green]")
+                console.print(
+                    f"[bold green]Collaborateur ID {collaborateur.id} "
+                    "mis à jour avec succès ![/bold green]"
+                )
         except PermissionError as e:
             console.print(f"[bold red]Erreur d'autorisation : {e}[/bold red]")
         except ValueError as e:
@@ -309,37 +360,55 @@ def delete_collaborateur(collaborateur_id):
     """
     token = load_token()
     if not token:
-        console.print("[bold red]Erreur : Vous devez être connecté pour cette commande.[/bold red]")
+        console.print("[bold red]Erreur : Vous devez être connecté "
+                      "pour cette commande.[/bold red]")
         return
 
     payload = decode_token(token)
     if not payload:
-        console.print("[bold red]Erreur : Token invalide ou expiré. Veuillez vous reconnecter.[/bold red]")
+        console.print("[bold red]Erreur : Token invalide ou expiré. "
+                      "Veuillez vous reconnecter.[/bold red]")
         return
 
     role = payload.get("role")
     if role != "gestion":
-        console.print("[bold red]Erreur : Seuls les gestionnaires peuvent supprimer un collaborateur.[/bold red]")
+        console.print("[bold red]Erreur : Seuls les gestionnaires peuvent "
+                      "supprimer un collaborateur.[/bold red]")
         return
 
-    console.print(f"\n[bold cyan]🔹 Suppression du collaborateur ID {collaborateur_id}...[/bold cyan]")
+    console.print(
+        f"\n[bold cyan]🔹 Suppression du collaborateur ID {collaborateur_id}..."
+        "[/bold cyan]"
+    )
 
-    confirmation = click.confirm("Êtes-vous sûr de vouloir supprimer ce collaborateur ?", default=False)
+    confirmation = click.confirm(
+        "Êtes-vous sûr de vouloir supprimer ce collaborateur ?", default=False
+    )
     if not confirmation:
         console.print("[bold yellow]Suppression annulée.[/bold yellow]")
         return
 
     with SessionLocal() as db:
         try:
-            collaborateur = delete_collaborateur_service(db, token, collaborateur_id)
+            collaborateur = delete_collaborateur_service(
+                db, token, collaborateur_id
+            )
             if collaborateur:
                 sentry_sdk.capture_message(
-                    f"Collaborateur {collaborateur.nom} (ID {collaborateur.id}) supprimé par {payload.get('nom') + ' ' + payload.get('prenom')}",
+                    f"Collaborateur {collaborateur.nom} "
+                    f"(ID {collaborateur.id}) "
+                    f"supprimé par {payload.get('prenom')}",
                     level="info"
                 )
-                console.print(f"[bold green]Collaborateur ID {collaborateur.id} supprimé avec succès ![/bold green]")
+                console.print(
+                    f"[bold green]Collaborateur ID {collaborateur.id} "
+                    "supprimé avec succès ![/bold green]"
+                )
             else:
-                console.print(f"[bold red]Erreur : Collaborateur ID {collaborateur_id} non trouvé.[/bold red]")
+                console.print(
+                    f"[bold red]Erreur : Collaborateur ID {collaborateur_id} "
+                    f"non trouvé.[/bold red]"
+                )
         except PermissionError as e:
             console.print(f"[bold red]Erreur d'autorisation : {e}[/bold red]")
         except Exception as e:

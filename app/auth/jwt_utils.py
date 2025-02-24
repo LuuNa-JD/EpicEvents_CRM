@@ -10,7 +10,8 @@ def generate_token(user_id: int, role: str, nom: str, prenom: str):
         "role": role,
         "nom": nom,
         "prenom": prenom,
-        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+        "exp": (datetime.datetime.now(datetime.timezone.utc) +
+                datetime.timedelta(hours=1))
     }
     return jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
 
