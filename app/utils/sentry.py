@@ -8,7 +8,7 @@ SENTRY_DSN = os.getenv("SENTRY_DSN")
 
 if not SENTRY_DSN:
     print("❌ SENTRY_DSN non défini. Sentry ne sera pas activé.")
-    exit()
+
 
 sentry_sdk.init(
     dsn=SENTRY_DSN,
