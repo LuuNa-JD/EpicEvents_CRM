@@ -14,7 +14,7 @@ def clear_seed_data():
         db.query(Contrat).delete()
         db.query(Client).delete()
         db.query(Collaborateur).delete()
-        db.query(Departement).delete
+        db.query(Departement).delete()
 
         db.commit()
         print("Données de seed supprimées avec succès.")
