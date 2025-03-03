@@ -82,7 +82,9 @@ def create_evenement():
         id_contrat = click.prompt("ID du contrat", type=int)
 
         # Demander la date de début
-        date_debut = click.prompt("Date de début (JJ/MM/AAAA)", type=str)
+        date_debut = click.prompt(
+            "Date de début (JJ/MM/AAAA)", type=str
+        )
         date_fin = click.prompt("Date de fin (JJ/MM/AAAA)", type=str)
         try:
             date_debut = datetime.strptime(date_debut, "%d/%m/%Y").date()
@@ -98,11 +100,13 @@ def create_evenement():
                           "Utilisez JJ/MM/AAAA.[/bold red]")
             return
 
-        lieu = click.prompt("Lieu", type=str)
-        nombre_participants = click.prompt("Nombre de participants", type=int)
+        lieu = click.prompt("Lieu", type=str).strip().lower().capitalize()
+        nombre_participants = click.prompt(
+            "Nombre de participants", type=int
+        )
         notes = click.prompt(
             "Notes (optionnel)", type=str, default="", show_default=False
-        )
+        ).strip().lower()
 
         # Création de l'événement
         with SessionLocal() as db:
@@ -157,7 +161,9 @@ def assign_support_to_evenement():
                 f"{evt.date_debut.strftime('%d/%m/%Y')}"
             )
 
-        id_evenement = click.prompt("ID de l'événement à attribuer", type=int)
+        id_evenement = click.prompt(
+            "ID de l'événement à attribuer", type=int
+        )
 
         evenement = get_evenement(db, id_evenement)
         if not evenement:
@@ -368,7 +374,7 @@ def update_evenement():
             lieu = click.prompt(
                 "Nouveau lieu (laisser vide pour ne pas changer)",
                 default="", show_default=False
-            )
+            ).strip().lower().capitalize()
             participants = click.prompt(
                 "Nombre de participants (laisser vide pour ne pas changer)",
                 type=int,
@@ -378,7 +384,7 @@ def update_evenement():
                 "Notes (laisser vide pour ne pas changer)",
                 default="",
                 show_default=False
-            )
+            ).strip().lower()
             # Convertir les dates
             date_debut = (
                 datetime.strptime(date_debut_str, "%d/%m/%Y")

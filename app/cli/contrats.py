@@ -1,5 +1,5 @@
 import click
-import sentry_sdk
+from app.utils.sentry import sentry_sdk
 from rich.console import Console
 from app.services.contrat_service import (
     list_all_contrats,

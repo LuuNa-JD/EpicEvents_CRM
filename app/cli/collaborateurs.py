@@ -1,6 +1,6 @@
 import click
 import re
-import sentry_sdk
+from app.utils.sentry import sentry_sdk
 from rich.console import Console
 from app.services.collaborateur_service import (
     create_new_collaborateur,
@@ -68,14 +68,14 @@ def create_collaborateur():
     )
 
     # Récupération des informations utilisateur
-    nom = click.prompt("Nom", type=str)
-    prenom = click.prompt("Prénom", type=str)
-    email = click.prompt("Email", type=str)
+    nom = click.prompt("Nom", type=str).strip().lower().capitalize()
+    prenom = click.prompt("Prénom", type=str).strip().lower().capitalize()
+    email = click.prompt("Email", type=str).strip().lower()
     if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
         console.print("[bold red]Erreur : Email invalide.[/bold red]")
         return
-    login = click.prompt("Nom d'utilisateur", type=str)
-    password = click.prompt("Mot de passe", type=str, hide_input=True)
+    login = click.prompt("Nom d'utilisateur", type=str).strip().lower()
+    password = click.prompt("Mot de passe", type=str, hide_input=True).strip()
 
     # Récupération et affichage des départements disponibles
     with SessionLocal() as db:
@@ -256,17 +256,17 @@ def update_collaborateur():
         "Nouveau nom (laisser vide pour ne pas changer)",
         default="",
         show_default=False
-    )
+    ).strip().lower().capitalize()
     prenom = click.prompt(
         "Nouveau prénom (laisser vide pour ne pas changer)",
         default="",
         show_default=False
-    )
+    ).strip().lower().capitalize()
     email = click.prompt(
         "Nouvel email (laisser vide pour ne pas changer)",
         default="",
         show_default=False
-    )
+    ).strip().lower()
     if email and not re.match(r"[^@]+@[^@]+\.[^@]+", email):
         console.print("[bold red]Erreur : Email invalide.[/bold red]")
         return
@@ -274,13 +274,13 @@ def update_collaborateur():
         "Nouveau login (laisser vide pour ne pas changer)",
         default="",
         show_default=False
-    )
+    ).strip().lower()
     password = click.prompt(
         "Nouveau mot de passe (laisser vide pour ne pas changer)",
         default="",
         show_default=False,
         hide_input=True
-    )
+    ).strip()
 
     with SessionLocal() as db:
         departements = get_all_departements(db)

@@ -3,6 +3,7 @@ from rich.console import Console
 from app.auth.jwt_utils import decode_token
 from app.utils.file_utils import load_token
 import jwt
+from app.utils.sentry import sentry_sdk
 
 console = Console()
 
@@ -14,8 +15,11 @@ def role_required(allowed_roles):
         def wrapper(*args, **kwargs):
             token = load_token()
             if not token:
-                console.print("[bold red]Vous devez être connecté pour "
-                              "utiliser cette commande.[/bold red]")
+                error_message = (
+                    "Vous devez être connecté pour utiliser cette commande."
+                )
+                console.print(f"[bold red]{error_message}[/bold red]")
+                sentry_sdk.capture_message(error_message, level="warning")
                 return
 
             try:
@@ -23,19 +27,28 @@ def role_required(allowed_roles):
                 user_role = payload.get("role")
 
                 if user_role not in allowed_roles:
-                    console.print("[bold red]Accès refusé : Cette commande "
-                                  f"est réservée aux rôles {allowed_roles}."
-                                  "[/bold red]")
+                    error_message = (
+                        "Accès refusé : Cette commande est réservée aux rôles "
+                        f"{allowed_roles}. Utilisateur avec "
+                        f"rôle '{user_role}' "
+                        " tenté d'y accéder."
+                    )
+                    console.print(f"[bold red]{error_message}[/bold red]")
+                    sentry_sdk.capture_message(error_message, level="warning")
                     return
 
                 return func(*args, **kwargs)
             except jwt.ExpiredSignatureError:
-                console.print("[bold red]Erreur : Votre session a expiré. "
-                              "Veuillez vous reconnecter.[/bold red]")
-            except Exception as e:
-                console.print(
-                    f"[bold red]Erreur d'authentification : {e}[/bold red]"
+                error_message = (
+                    "Erreur : Votre session a expiré. Veuillez vous "
+                    "reconnecter."
                 )
+                console.print(f"[bold red]{error_message}[/bold red]")
+                sentry_sdk.capture_message(error_message, level="warning")
+            except Exception as e:
+                error_message = f"Erreur d'authentification : {e}"
+                console.print(f"[bold red]{error_message}[/bold red]")
+                sentry_sdk.capture_exception(e)
         return wrapper
     return decorator
 

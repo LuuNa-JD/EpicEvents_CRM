@@ -113,17 +113,17 @@ def create_client():
                   f"Rôle : {role}[/bold cyan]")
 
     # Saisie des informations du client
-    nom = click.prompt("Nom complet", type=str)
-    email = click.prompt("Email", type=str)
+    nom = click.prompt("Nom complet", type=str).strip().lower().title()
+    email = click.prompt("Email", type=str).strip().lower()
     if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
         console.print("[bold red]Erreur : Email invalide.[/bold red]")
         return
-    telephone = click.prompt("Téléphone", type=str)
+    telephone = click.prompt("Téléphone", type=str).strip()
     if not re.match(r"0[1-9]\d{8}", telephone):
         console.print("[bold red]Erreur : Numéro de "
                       "téléphone invalide.[/bold red]")
         return
-    entreprise = click.prompt("Nom de l'entreprise", type=str)
+    entreprise = click.prompt("Nom de l'entreprise", type=str).strip().title()
 
     # Connexion à la base de données et création du client
     with SessionLocal() as db:
@@ -189,12 +189,12 @@ def update_client():
         "Nouveau nom (laisser vide pour ne pas changer)",
         default="",
         type=str
-    )
+    ).strip().lower().title()
     email = click.prompt(
         "Nouvel email (laisser vide pour ne pas changer)",
         default="",
         type=str
-    )
+    ).strip().lower()
     if email and not re.match(r"[^@]+@[^@]+\.[^@]+", email):
         console.print("[bold red]Erreur : Email invalide.[/bold red]")
         return
@@ -202,7 +202,7 @@ def update_client():
         "Nouveau téléphone (laisser vide pour ne pas changer)",
         default="",
         type=str
-    )
+    ).strip()
     if telephone and not re.match(r"0[1-9]\d{8}", telephone):
         console.print("[bold red]Erreur : Numéro de téléphone "
                       "invalide.[/bold red]")
@@ -211,7 +211,7 @@ def update_client():
         "Nouvelle entreprise (laisser vide pour ne pas changer)",
         default="",
         type=str
-    )
+    ).strip().title()
 
     # Construire l'objet updates
     updates = {k: v for k, v in {

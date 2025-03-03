@@ -1,4 +1,5 @@
 import click
+from app.utils.sentry import sentry_sdk
 from rich.console import Console
 from app.cli.auth import auth_group
 from app.cli.clients import clients_group
@@ -36,10 +37,9 @@ class CustomCLI(click.Group):
         command = super().get_command(ctx, cmd_name)
 
         if command is None:
-            console.print(
-                f"[bold red]Erreur : La commande '{cmd_name}' "
-                f"n'existe pas.[/bold red]"
-            )
+            error_message = f"La commande '{cmd_name}' n'existe pas."
+            console.print(f"[bold red]Erreur : {error_message}[/bold red]")
+            sentry_sdk.capture_message(error_message, level="warning")
             ctx.exit(1)
 
         if role:
@@ -47,10 +47,13 @@ class CustomCLI(click.Group):
 
             if (cmd_name not in allowed_cmds and
                     not any(cmd_name.startswith(ac) for ac in allowed_cmds)):
-                console.print(
-                    f"[bold red]Accès refusé : La commande '{cmd_name}' "
-                    "n'est pas disponible pour votre rôle.[/bold red]"
+                error_message = (
+                    f"Accès refusé : La commande '{cmd_name}' "
+                    "n'est pas disponible "
+                    f"pour votre rôle '{role}'. "
                 )
+                console.print(f"[bold red]{error_message}[/bold red]")
+                sentry_sdk.capture_message(error_message, level="warning")
                 ctx.exit(1)
 
         return command
