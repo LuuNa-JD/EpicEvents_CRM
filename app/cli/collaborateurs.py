@@ -93,7 +93,7 @@ def create_collaborateur():
         show_choices=False
     )
 
-    departement_id = int(departement_id)  # 🔹 Convertir en entier
+    departement_id = int(departement_id)
 
     with SessionLocal() as db:
         try:

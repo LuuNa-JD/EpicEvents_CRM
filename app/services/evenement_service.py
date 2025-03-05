@@ -85,7 +85,7 @@ def list_events_for_support(db, token):
 @gestion_required
 def get_unassigned_evenements(db):
     """Retourne la liste des événements sans support attribué."""
-    return db.query(Evenement).filter(Evenement.id_support is None).all()
+    return db.query(Evenement).filter(Evenement.id_support.is_(None)).all()
 
 
 @support_required
